@@ -1,0 +1,3 @@
+bucketName = "prometeoapi-nbox-qa"
+// tableName = "prometeoapi-nbox-qa"
+tableName = "test"
