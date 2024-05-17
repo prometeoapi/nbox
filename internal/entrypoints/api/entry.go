@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
 	"nbox/internal/entrypoints/api/response"
@@ -28,7 +27,7 @@ func (h *EntryHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 
 	err := h.entryAdapter.Upsert(ctx, entries)
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"message": "%s"}`, err), http.StatusBadRequest)
+		response.Error(w, r, err, http.StatusBadRequest)
 		return
 	}
 	response.Success(w, r, map[string]string{"message": "ok"})

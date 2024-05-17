@@ -8,6 +8,7 @@ import (
 	"nbox/internal/adapters/aws"
 	"nbox/internal/application"
 	"nbox/internal/entrypoints/api"
+	"nbox/internal/usecases"
 	"net"
 	"net/http"
 )
@@ -28,6 +29,8 @@ func main() {
 		fx.Provide(aws.NewDynamodbBackend),
 		fx.Provide(api.NewEntryHandler),
 		fx.Provide(api.NewBoxHandler),
+		fx.Provide(usecases.NewPathUseCase),
+		fx.Provide(usecases.NewBox),
 		fx.Provide(application.NewConfig),
 		fx.Provide(api.NewApi),
 		fx.Invoke(func(api *api.Api, config *application.Config) {

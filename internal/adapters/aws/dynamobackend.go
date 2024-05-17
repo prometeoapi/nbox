@@ -15,13 +15,12 @@ import (
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
-	pkgPath "path"
+	"nbox/internal/usecases"
 	"strings"
 	"time"
 )
 
 const (
-	DynamoDBEmptyPath         = " "
 	DynamoDBLockPrefix        = "_"
 	DefaultParallelOperations = 128
 )
@@ -31,10 +30,10 @@ type PermitPool struct {
 }
 
 type Record struct {
-	Path    string                 `dynamodbav:"Path"`
-	Key     string                 `dynamodbav:"Key"`
-	Value   []byte                 `dynamodbav:"Value"`
-	Version models.VersionMetadata `dynamodbav:"Version"`
+	Path  string `dynamodbav:"Path"`
+	Key   string `dynamodbav:"Key"`
+	Value []byte `dynamodbav:"Value"`
+	//Version models.VersionMetadata `dynamodbav:"Version"`
 }
 
 func NewPermitPool(permits int) *PermitPool {
@@ -62,16 +61,18 @@ func (c *PermitPool) CurrentPermits() int {
 }
 
 type dynamodbBackend struct {
-	client     *dynamodb.Client
-	config     *application.Config
-	permitPool *PermitPool
+	client      *dynamodb.Client
+	config      *application.Config
+	permitPool  *PermitPool
+	pathUseCase *usecases.PathUseCase
 }
 
-func NewDynamodbBackend(dynamodb *dynamodb.Client, config *application.Config) domain.EntryAdapter {
+func NewDynamodbBackend(dynamodb *dynamodb.Client, config *application.Config, pathUseCase *usecases.PathUseCase) domain.EntryAdapter {
 	return &dynamodbBackend{
-		client:     dynamodb,
-		config:     config,
-		permitPool: NewPermitPool(0),
+		client:      dynamodb,
+		config:      config,
+		permitPool:  NewPermitPool(0),
+		pathUseCase: pathUseCase,
 	}
 }
 
@@ -83,16 +84,16 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) er
 
 	records := map[string]Record{}
 	for _, entry := range entries {
-		path := recordPathForVaultKey(entry.Key)
-		key := recordKeyForVaultKey(entry.Key)
+		path := d.pathUseCase.PathWithoutKey(entry.Key)
+		key := d.pathUseCase.BaseKey(entry.Key)
 		records[fmt.Sprintf("%s%s", path, key)] = Record{Path: path, Key: key, Value: entry.Value}
 
-		for _, prefix := range Prefixes(entry.Key) {
-			path = recordPathForVaultKey(prefix)
-			key = fmt.Sprintf("%s/", recordKeyForVaultKey(prefix))
+		for _, prefix := range d.pathUseCase.Prefixes(entry.Key) {
+			path = d.pathUseCase.PathWithoutKey(prefix)
+			key = fmt.Sprintf("%s/", d.pathUseCase.BaseKey(prefix))
 			records[fmt.Sprintf("%s%s", path, key)] = Record{
-				Path: recordPathForVaultKey(prefix),
-				Key:  fmt.Sprintf("%s/", recordKeyForVaultKey(prefix)),
+				Path: path,
+				Key:  key,
 			}
 		}
 	}
@@ -108,35 +109,6 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) er
 		)
 	}
 
-	//for _, entry := range entries {
-	//	//item, err = d.marshalEntry(recordPathForVaultKey(entry.Key), recordKeyForVaultKey(entry.Key), entry.Value)
-	//	item, err = attributevalue.MarshalMap(Record{
-	//		Path:  recordPathForVaultKey(entry.Key),
-	//		Key:   recordKeyForVaultKey(entry.Key),
-	//		Value: entry.Value,
-	//	})
-	//	if err != nil {
-	//		log.Printf("Err could not convert prefix record to DynamoDB item: %v", err)
-	//		continue
-	//	}
-	//	writeReqs = append(
-	//		writeReqs, types.WriteRequest{PutRequest: &types.PutRequest{Item: item}},
-	//	)
-	//
-	//	for _, prefix := range Prefixes(entry.Key) {
-	//		item, err = attributevalue.MarshalMap(Record{
-	//			Path: recordPathForVaultKey(prefix),
-	//			Key:  fmt.Sprintf("%s/", recordKeyForVaultKey(prefix)),
-	//		})
-	//		if err != nil {
-	//			log.Printf("Err could not convert prefix record to DynamoDB item: %v", err)
-	//			continue
-	//		}
-	//		writeReqs = append(writeReqs, types.WriteRequest{PutRequest: &types.PutRequest{Item: item}})
-	//	}
-	//}
-
-	//fmt.Printf("writeReqs %+v", writeReqs)
 	return d.writeReqsBatch(ctx, writeReqs)
 }
 
@@ -182,8 +154,8 @@ func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, requests []types.W
 
 // Retrieve Get is used to fetch an entry
 func (d *dynamodbBackend) Retrieve(ctx context.Context, key string) (*models.Entry, error) {
-	p, _ := attributevalue.Marshal(recordPathForVaultKey(key))
-	k, _ := attributevalue.Marshal(recordKeyForVaultKey(key))
+	p, _ := attributevalue.Marshal(d.pathUseCase.PathWithoutKey(key))
+	k, _ := attributevalue.Marshal(d.pathUseCase.BaseKey(key))
 
 	resp, err := d.client.GetItem(ctx, &dynamodb.GetItemInput{
 		Key:            map[string]types.AttributeValue{"Path": p, "Key": k},
@@ -204,7 +176,7 @@ func (d *dynamodbBackend) Retrieve(ctx context.Context, key string) (*models.Ent
 	}
 
 	return &models.Entry{
-		Key:   vaultKey(record),
+		Key:   d.pathUseCase.Concat(record.Path, record.Key), // vaultKey(record),
 		Value: record.Value,
 	}, nil
 }
@@ -214,7 +186,7 @@ func (d *dynamodbBackend) Retrieve(ctx context.Context, key string) (*models.Ent
 func (d *dynamodbBackend) List(ctx context.Context, prefix string) ([]models.Entry, error) {
 	prefix = strings.TrimSuffix(prefix, "/")
 	entries := make([]models.Entry, 0)
-	prefix = escapeEmptyPath(prefix)
+	prefix = d.pathUseCase.EscapeEmptyPath(prefix)
 
 	keyEx := expression.Key("Path").Equal(expression.Value(prefix))
 	expr, err := expression.NewBuilder().WithKeyCondition(keyEx).Build()
@@ -250,70 +222,11 @@ func (d *dynamodbBackend) List(ctx context.Context, prefix string) ([]models.Ent
 				entries = append(entries, models.Entry{
 					Key:   record.Key,
 					Value: record.Value,
+					Path:  record.Path,
 				})
 			}
 		}
 	}
 
 	return entries, nil
-}
-
-// recordPathForVaultKey transforms a vault key into
-// a value suitable for the `DynamoDBRecord`'s `Path`
-// property. This path equals the vault key without
-// its last component.
-func recordPathForVaultKey(key string) string {
-	if strings.Contains(key, "/") {
-		return pkgPath.Dir(key)
-	}
-	return DynamoDBEmptyPath
-}
-
-// recordKeyForVaultKey transforms a vault key into
-// a value suitable for the `DynamoDBRecord`'s `Key`
-// property. This path equals the vault key's
-// last component.
-func recordKeyForVaultKey(key string) string {
-	return pkgPath.Base(key)
-}
-
-// vaultKey returns the vault key for a given record
-// from the DynamoDB table. This is the combination of
-// the records Path and Key.
-func vaultKey(record *Record) string {
-	path := unescapeEmptyPath(record.Path)
-	if path == "" {
-		return record.Key
-	}
-	return pkgPath.Join(record.Path, record.Key)
-}
-
-// escapeEmptyPath is used to escape the root key's path
-// with a value that can be stored in DynamoDB. DynamoDB
-// does not allow values to be empty strings.
-func escapeEmptyPath(s string) string {
-	if s == "" {
-		return DynamoDBEmptyPath
-	}
-	return s
-}
-
-// unescapeEmptyPath is the opposite of `escapeEmptyPath`.
-func unescapeEmptyPath(s string) string {
-	if s == DynamoDBEmptyPath {
-		return ""
-	}
-	return s
-}
-
-// Prefixes is a shared helper function returns all parent 'folders' for a
-// given vault key.
-// e.g. for 'foo/bar/baz', it returns ['foo', 'foo/bar']
-func Prefixes(s string) []string {
-	components := strings.Split(s, "/")
-	var result []string
-	for i := 1; i < len(components); i++ {
-		result = append(result, strings.Join(components[:i], "/"))
-	}
-	return result
 }

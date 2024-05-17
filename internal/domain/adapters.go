@@ -5,14 +5,14 @@ import (
 	"nbox/internal/domain/models"
 )
 
+// StoreOperations store templates
 type StoreOperations interface {
-	CreateBox(*models.Box) (*models.Box, error)
-	//RetrieveBox(boxName string, stage string) models.Box
-	//GetOrCreateStage(box models.Box, stage string)
-	//UpsertTemplate(box models.Box, template string)
-	//UpsertVariable(box models.Box, value interface{})
+	UpsertBox(ctx context.Context, box *models.Box) []string
+	BoxExists(ctx context.Context, service string, stage string, template string) (bool, error)
+	RetrieveBox(ctx context.Context, service string, stage string, template string) ([]byte, error)
 }
 
+// EntryAdapter vars backend operations
 type EntryAdapter interface {
 	Upsert(ctx context.Context, entries []models.Entry) error
 	Retrieve(ctx context.Context, key string) (*models.Entry, error)

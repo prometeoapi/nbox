@@ -7,6 +7,7 @@ import (
 )
 
 type Entry struct {
+	Path  string          `json:"-"`
 	Key   string          `json:"key"`
 	Value json.RawMessage `json:"value"`
 }

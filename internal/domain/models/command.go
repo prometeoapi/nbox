@@ -8,8 +8,6 @@ var (
 )
 
 type Command[T any] struct {
-	Command CommandName `json:"command"`
+	Command CommandName `json:"command,omitempty"`
 	Payload T           `json:"payload"`
-	//Stage   string      `json:"stage"`
-	//Payload string      `json:"payload"`
 }

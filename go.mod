@@ -13,6 +13,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/go-chi/chi/v5 v5.0.12
 	go.uber.org/fx v1.21.1
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 )
 
 require (

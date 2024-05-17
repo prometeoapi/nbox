@@ -6,115 +6,86 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"io"
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
 )
 
 type storeAdapter struct {
-	s3       *s3.Client
-	dynamodb *dynamodb.Client
-	config   *application.Config
+	s3     *s3.Client
+	config *application.Config
 }
 
-func NewStoreAdapter(s3 *s3.Client, dynamodb *dynamodb.Client, config *application.Config) domain.StoreOperations {
+func NewStoreAdapter(s3 *s3.Client, config *application.Config) domain.StoreOperations {
 	return &storeAdapter{
-		s3:       s3,
-		dynamodb: dynamodb,
-		config:   config,
+		s3:     s3,
+		config: config,
 	}
 }
 
-//func (b *storeAdapter) BucketExists(bucketName string) (bool, error) {
-//	return true, nil
-//}
-
-func (b *storeAdapter) save(ctx context.Context, box *models.Box) (*models.Box, error) {
-
-	item, err := attributevalue.MarshalMap(box)
+func (b *storeAdapter) store(ctx context.Context, path string, stage models.Stage) (*s3.PutObjectOutput, error) {
+	var out bytes.Buffer
+	err := json.Indent(&out, []byte(stage.Template.Value), "", "  ")
 	if err != nil {
 		return nil, err
 	}
-	out, err := b.dynamodb.PutItem(ctx, &dynamodb.PutItemInput{
-		Item:      item,
-		TableName: aws.String(b.config.TableName),
+
+	return b.s3.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(b.config.BucketName),
+		Key:    aws.String(path),
+		Body:   bytes.NewReader(out.Bytes()),
 	})
-
-	fmt.Printf("%+v\n", out)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return box, nil
 }
 
-func (b *storeAdapter) storeTemplate(ctx context.Context, path string, stage models.Stage) error {
+func (b *storeAdapter) BoxExists(ctx context.Context, service string, stage string, template string) (bool, error) {
+	path := fmt.Sprintf("%s/%s/%s", service, stage, template)
 
-	respHead, err := b.s3.HeadObject(ctx, &s3.HeadObjectInput{
+	_, err := b.s3.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(b.config.BucketName),
 		Key:    aws.String(path),
 	})
-	fmt.Printf("%+v \n", respHead)
+
+	return err == nil, err
+}
+
+func (b *storeAdapter) RetrieveBox(ctx context.Context, service string, stage string, template string) ([]byte, error) {
+	path := fmt.Sprintf("%s/%s/%s", service, stage, template)
+	object, err := b.s3.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(b.config.BucketName),
+		Key:    aws.String(path),
+	})
 
 	if err != nil {
-		var out bytes.Buffer
-		err := json.Indent(&out, []byte(stage.Template.Value), "", "  ")
-		if err != nil {
-			return err
-		}
-
-		respPut, err := b.s3.PutObject(ctx, &s3.PutObjectInput{
-			Bucket: aws.String(b.config.BucketName),
-			Key:    aws.String(path),
-			Body:   bytes.NewReader(out.Bytes()),
-		})
-
-		fmt.Printf("%+v \n", respPut)
-
-		if err != nil {
-			return err
-		}
-
+		return nil, err
 	}
-	return nil
+
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(object.Body)
+
+	body, err := io.ReadAll(object.Body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
 
-func (b *storeAdapter) CreateBox(box *models.Box) (*models.Box, error) {
-	ctx := context.Background()
+func (b *storeAdapter) UpsertBox(ctx context.Context, box *models.Box) []string {
+	var result []string
 	for stageName, stage := range box.Stage {
 		path := fmt.Sprintf("%s/%s/%s", box.Service, stageName, stage.Template.Name)
+
 		stage.Template.Name = path
 		box.Stage[stageName] = stage
-		s3Result := b.storeTemplate(ctx, path, stage)
-		//if s3Result == nil {
-		//	return b.save(ctx, box)
-		//}
+		_, err := b.store(ctx, path, stage)
 
-		return nil, s3Result
+		if err == nil {
+			result = append(result, path)
+		}
 	}
-	return nil, nil
+	return result
 }
-
-//func (b storeAdapter) RetrieveBox(boxName string, stage string) models.Box {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (b storeAdapter) GetOrCreateStage(box models.Box, stage string) {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (b storeAdapter) UpsertTemplate(box models.Box, template string) {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (b storeAdapter) UpsertVariable(box models.Box, value interface{}) {
-//	//TODO implement me
-//	panic("implement me")
-//}

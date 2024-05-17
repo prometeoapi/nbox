@@ -1,75 +1,16 @@
-### create
-POST http://localhost:8090/api/
-Content-Type: application/json
-
-{
-  "service": "demo1",
-  "stages": {
-    "development": null,
-    "qa": null
-  }
-}
-
-
-### upsert variables api/:service/
-# commands
-# ${stage}.upsert.variables
-# ${stage}.upsert.template
-PUT http://localhost:8090/api/box/demo1
-Content-Type: application/json
-
-{
-  "command": "upsert.variables",
-  "stage": "development",
-  "payload": {
-    "key": "NORLIS",
-    "value": "hola"
-  }
-}
-
-### upsert template api/:service/
-
-PUT http://localhost:8090/api/box/demo1
-Content-Type: application/json
-
-{
-  "command": "upsert.template",
-  "stage": "development",
-  "payload": {
-    "value": "{\"blabla\": \"value\"}"
-  }
-}
-
-
-### create service
+### create template
 
 POST http://localhost:7337/api/box
 Content-Type: application/json
 
 {
-  "command": "create.service",
-  "stage": "development",
   "payload": {
     "service": "widget-x",
     "stage": {
       "development": {
         "template": {
           "name": "task_definition.json",
-          "value": "{\"key\": \"value\"}",
-          "Version": 0,
-          "CreatedTime": "0001-01-01T00:00:00Z"
-        },
-        "variables": {
-          "AGE": {
-            "value": 100,
-            "Version": 0,
-            "CreatedTime": "0001-01-01T00:00:00Z"
-          },
-          "NAME": {
-            "value": "n1",
-            "Version": 0,
-            "CreatedTime": "0001-01-01T00:00:00Z"
-          }
+          "value": "{\"ENV_1\":\"{widget-x.development.key}\",\"ENV_2\":\"{widget-x.development.debug}\",\"GLOBAL_SERVICE\":\"{widget-x.sentry}\",\"domain\":\"{private-domain}\"}"
         }
       }
     }
@@ -77,21 +18,41 @@ Content-Type: application/json
 }
 
 
+
+
+### check exist template
+HEAD http://localhost:7337/api/box/widget-x/development/task_definition.json
+Content-Type: application/json
+
+
+### get template
+GET http://localhost:7337/api/box/widget-x/development/task_definition.json
+Content-Type: application/json
+
+
+### get template
+GET http://localhost:7337/api/box/widget-x/development/task_definition.json/build
+Content-Type: application/json
+
+
 ### create
 POST http://localhost:7337/api/entry
 Content-Type: application/json
 
 [
-  {"key": "argos/development/debug", "value": "False"},
-  {"key": "argos/development/django_settings_module", "value": "config.settings.production"}
+  {"key": "widget-x/development/debug", "value": "False"},
+  {"key": "widget-x/development/key", "value": "bla bla"},
+  {"key": "widget-x/development/domain", "value": "test.com"},
+  {"key": "widget-x.sentry", "value": "xxxxx secret sentry"},
+  {"key": "private-domain", "value": "privatedomain"}
 ]
 
 
 ### Get key
-GET http://localhost:7337/api/entry/key?v=argos/test/user3
+GET http://localhost:7337/api/entry/key?v=widget/development/domain
 Content-Type: application/json
 
 
 ### Get prefix
-GET http://localhost:7337/api/entry/prefix?v=argos/qa
+GET http://localhost:7337/api/entry/prefix?v=widget-x/development
 Content-Type: application/json

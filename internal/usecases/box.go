@@ -1,36 +1,50 @@
 package usecases
 
 import (
+	"context"
+	"fmt"
 	"nbox/internal/domain"
-	"nbox/internal/domain/models"
+	"strings"
 )
 
 type BoxUseCase struct {
-	boxOperation domain.StoreOperations
+	boxOperation    domain.StoreOperations
+	entryOperations domain.EntryAdapter
 }
 
-func NewBox(boxOperation domain.StoreOperations) *BoxUseCase {
-	return &BoxUseCase{boxOperation: boxOperation}
+func NewBox(boxOperation domain.StoreOperations, entryOperations domain.EntryAdapter) *BoxUseCase {
+	return &BoxUseCase{
+		boxOperation:    boxOperation,
+		entryOperations: entryOperations,
+	}
 }
 
-func (b *BoxUseCase) Upsert(boxName string, command models.Command[any]) bool {
-	//box, _ := b.boxOperation.GetCreateBox(boxName)
+func (b *BoxUseCase) BuildBox(ctx context.Context, service string, stage string, template string) (string, error) {
+	box, err := b.boxOperation.RetrieveBox(ctx, service, stage, template)
+	if err != nil {
+		return "", err
+	}
 
-	//switch command.Command {
-	//case models.UpsertVariable:
-	//	return b.UpsertVariable(box, command)
-	//case models.UpsertTemplate:
-	//	return b.UpsertTemplate(box, command)
-	//default:
-	//	return false
-	//}
-	return true
-}
+	tmpl := string(box)
+	proc := NewProcessor(tmpl)
+	prefixes := proc.GetPrefixes()
 
-func (b *BoxUseCase) UpsertTemplate(box models.Box, command models.Command[any]) bool {
-	return true
-}
+	tree := map[string]string{}
 
-func (b *BoxUseCase) UpsertVariable(box models.Box, command models.Command[any]) bool {
-	return true
+	for _, k := range prefixes {
+		entries, _ := b.entryOperations.List(ctx, k)
+		for _, entry := range entries {
+			if entry.Value == nil {
+				continue
+			}
+			if k == "" {
+				tree[entry.Key] = string(entry.Value)
+				continue
+			}
+			p := strings.NewReplacer("/", ".").Replace(fmt.Sprintf("%s.%s", k, entry.Key))
+			tree[p] = string(entry.Value)
+		}
+	}
+
+	return proc.Replace(tree), nil
 }
