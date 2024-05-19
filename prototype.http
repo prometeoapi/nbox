@@ -1,5 +1,4 @@
 ### create template
-
 POST http://localhost:7337/api/box
 Content-Type: application/json
 
@@ -16,8 +15,6 @@ Content-Type: application/json
     }
   }
 }
-
-
 
 
 ### check exist template
