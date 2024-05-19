@@ -41,7 +41,7 @@ Content-Type: application/json
 
 [
   {"key": "widget-x/development/debug", "value": "False"},
-  {"key": "widget-x/development/key", "value": "bla bla"},
+  {"key": "widget-x/development/key", "value": "bla bla 2"},
   {"key": "widget-x/development/domain", "value": "test.com"},
   {"key": "widget-x.sentry", "value": "xxxxx secret sentry"},
   {"key": "private-domain", "value": "privatedomain"}

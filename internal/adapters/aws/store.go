@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"io"
 	"nbox/internal/application"
@@ -14,14 +17,22 @@ import (
 )
 
 type storeAdapter struct {
-	s3     *s3.Client
-	config *application.Config
+	s3             *s3.Client
+	dynamodbClient *dynamodb.Client
+	config         *application.Config
 }
 
-func NewStoreAdapter(s3 *s3.Client, config *application.Config) domain.StoreOperations {
+type BoxRecord struct {
+	Service  string          `dynamodbav:"Service"`
+	Stage    string          `dynamodbav:"Stage"`
+	Template models.Template `dynamodbav:"Template"`
+}
+
+func NewStoreAdapter(s3 *s3.Client, config *application.Config, dynamodb *dynamodb.Client) domain.StoreOperations {
 	return &storeAdapter{
-		s3:     s3,
-		config: config,
+		s3:             s3,
+		dynamodbClient: dynamodb,
+		config:         config,
 	}
 }
 
@@ -75,13 +86,31 @@ func (b *storeAdapter) RetrieveBox(ctx context.Context, service string, stage st
 }
 
 func (b *storeAdapter) UpsertBox(ctx context.Context, box *models.Box) []string {
-	var result []string
+	result := make([]string, 0)
+	var item map[string]types.AttributeValue
+
 	for stageName, stage := range box.Stage {
+		name := stage.Template.Name
 		path := fmt.Sprintf("%s/%s/%s", box.Service, stageName, stage.Template.Name)
 
 		stage.Template.Name = path
 		box.Stage[stageName] = stage
 		_, err := b.store(ctx, path, stage)
+		fmt.Printf("ErrStore. %s", err)
+		if err == nil {
+			item, _ = attributevalue.MarshalMap(BoxRecord{
+				Service: box.Service,
+				Stage:   stageName,
+				Template: models.Template{
+					Name:  path,
+					Value: name,
+				},
+			})
+			_, err = b.dynamodbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+				TableName: aws.String(b.config.BoxTableName), Item: item,
+			})
+			fmt.Printf("ErrDbStore. %s", err)
+		}
 
 		if err == nil {
 			result = append(result, path)

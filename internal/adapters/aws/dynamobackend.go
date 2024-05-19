@@ -116,7 +116,7 @@ func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, requests []types.W
 	for len(requests) > 0 {
 		var err error
 		batchSize := int(math.Min(float64(len(requests)), 25))
-		batch := map[string][]types.WriteRequest{d.config.TableName: requests[:batchSize]}
+		batch := map[string][]types.WriteRequest{d.config.EntryTableName: requests[:batchSize]}
 		requests = requests[batchSize:]
 
 		d.permitPool.Acquire()
@@ -159,7 +159,7 @@ func (d *dynamodbBackend) Retrieve(ctx context.Context, key string) (*models.Ent
 
 	resp, err := d.client.GetItem(ctx, &dynamodb.GetItemInput{
 		Key:            map[string]types.AttributeValue{"Path": p, "Key": k},
-		TableName:      aws.String(d.config.TableName),
+		TableName:      aws.String(d.config.EntryTableName),
 		ConsistentRead: aws.Bool(true),
 	})
 
@@ -197,7 +197,7 @@ func (d *dynamodbBackend) List(ctx context.Context, prefix string) ([]models.Ent
 	}
 
 	queryInput := &dynamodb.QueryInput{
-		TableName:                 aws.String(d.config.TableName),
+		TableName:                 aws.String(d.config.EntryTableName),
 		ConsistentRead:            aws.Bool(true),
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),

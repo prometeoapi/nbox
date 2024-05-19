@@ -6,8 +6,9 @@ import (
 )
 
 type Config struct {
-	BucketName string `pkl:"bucketName"`
-	TableName  string `pkl:"tableName"`
+	BucketName     string `pkl:"bucketName"`
+	EntryTableName string `pkl:"entryTableName"`
+	BoxTableName   string `pkl:"boxTableName"`
 }
 
 func NewConfig() *Config {
