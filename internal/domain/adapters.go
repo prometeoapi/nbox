@@ -10,6 +10,7 @@ type StoreOperations interface {
 	UpsertBox(ctx context.Context, box *models.Box) []string
 	BoxExists(ctx context.Context, service string, stage string, template string) (bool, error)
 	RetrieveBox(ctx context.Context, service string, stage string, template string) ([]byte, error)
+	List(ctx context.Context) ([]models.Box, error)
 }
 
 // EntryAdapter vars backend operations

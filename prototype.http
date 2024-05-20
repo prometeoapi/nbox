@@ -17,6 +17,11 @@ Content-Type: application/json
 }
 
 
+### get all boxes
+GET http://localhost:7337/api/box
+Content-Type: application/json
+
+
 ### check exist template
 HEAD http://localhost:7337/api/box/widget-x/development/task_definition.json
 Content-Type: application/json

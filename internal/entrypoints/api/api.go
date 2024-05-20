@@ -23,6 +23,7 @@ func NewApi(box *BoxHandler, entry *EntryHandler) *Api {
 	r.MethodNotAllowed(response.MethodNotAllowed)
 
 	r.Post("/api/box", box.UpsertBox)
+	r.Get("/api/box", box.List)
 	r.Head("/api/box/{service}/{stage}/{template}", box.Exist)
 	r.Get("/api/box/{service}/{stage}/{template}", box.Retrieve)
 	r.Get("/api/box/{service}/{stage}/{template}/build", box.Build)

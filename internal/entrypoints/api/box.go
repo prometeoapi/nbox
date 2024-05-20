@@ -81,3 +81,13 @@ func (b *BoxHandler) Build(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, _ = w.Write([]byte(data))
 }
+
+func (b *BoxHandler) List(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	data, err := b.store.List(ctx)
+	if err != nil {
+		response.Error(w, r, err, http.StatusNotFound)
+		return
+	}
+	response.Success(w, r, data)
+}

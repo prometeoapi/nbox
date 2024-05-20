@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"io"
+	"log"
 	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
@@ -117,4 +118,44 @@ func (b *storeAdapter) UpsertBox(ctx context.Context, box *models.Box) []string 
 		}
 	}
 	return result
+}
+
+func (b *storeAdapter) List(ctx context.Context) ([]models.Box, error) {
+	var err error
+	boxes := map[string]models.Box{}
+	results := make([]models.Box, 0)
+
+	if err != nil {
+		log.Printf("Err expression Builder %v \n", err)
+		return nil, err
+	}
+
+	scan, err := b.dynamodbClient.Scan(ctx, &dynamodb.ScanInput{
+		TableName:              aws.String(b.config.BoxTableName),
+		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, i := range scan.Items {
+		var record BoxRecord
+		err = attributevalue.UnmarshalMap(i, &record)
+		if err != nil {
+			continue
+		}
+
+		_, ok := boxes[record.Service]
+		if !ok {
+			boxes[record.Service] = models.Box{Service: record.Service, Stage: map[string]models.Stage{}}
+		}
+		boxes[record.Service].Stage[record.Stage] = models.Stage{Template: record.Template}
+	}
+
+	for _, box := range boxes {
+		results = append(results, box)
+	}
+
+	return results, nil
 }
