@@ -7,6 +7,7 @@ import (
 	"nbox/internal/adapters/aws"
 	"nbox/internal/application"
 	"nbox/internal/entrypoints/api"
+	"nbox/internal/entrypoints/api/health"
 	"nbox/internal/usecases"
 	"net"
 	"net/http"
@@ -35,6 +36,7 @@ func main() {
 		fx.Provide(usecases.NewBox),
 		fx.Provide(application.NewConfig),
 		fx.Provide(api.NewApi),
+		fx.Provide(health.NewHealthy),
 		fx.Invoke(func(api *api.Api, config *application.Config) {
 			done := make(chan error)
 			ctx := context.Background()
