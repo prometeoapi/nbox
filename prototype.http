@@ -1,5 +1,5 @@
 ### create template
-POST http://localhost:7337/api/box
+POST {{baseUrl}}/api/box
 Content-Type: application/json
 
 {
@@ -18,27 +18,27 @@ Content-Type: application/json
 
 
 ### get all boxes
-GET http://localhost:7337/api/box
+GET {{baseUrl}}/api/box
 Content-Type: application/json
 
 
 ### check exist template
-HEAD http://localhost:7337/api/box/widget-x/development/task_definition.json
+HEAD {{baseUrl}}/api/box/widget-x/development/task_definition.json
 Content-Type: application/json
 
 
 ### get template
-GET http://localhost:7337/api/box/widget-x/development/task_definition.json
+GET {{baseUrl}}/api/box/widget-x/development/task_definition.json
 Content-Type: application/json
 
 
 ### build template
-GET http://localhost:7337/api/box/widget-x/development/task_definition.json/build
+GET {{baseUrl}}/api/box/widget-x/development/task_definition.json/build
 Content-Type: application/json
 
 
 ### create
-POST http://localhost:7337/api/entry
+POST {{baseUrl}}/api/entry
 Content-Type: application/json
 
 [
@@ -51,10 +51,10 @@ Content-Type: application/json
 
 
 ### Get key
-GET http://localhost:7337/api/entry/key?v=widget/development/domain
+GET {{baseUrl}}/api/entry/key?v=widget-x/development/domain
 Content-Type: application/json
 
 
 ### Get prefix
-GET http://localhost:7337/api/entry/prefix?v=widget-x/development
+GET {{baseUrl}}/api/entry/prefix?v=widget-x/development
 Content-Type: application/json
