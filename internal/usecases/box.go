@@ -38,11 +38,11 @@ func (b *BoxUseCase) BuildBox(ctx context.Context, service string, stage string,
 				continue
 			}
 			if k == "" {
-				tree[entry.Key] = fmt.Sprintf(`%s`, entry.Value)
+				tree[entry.Key] = entry.Value
 				continue
 			}
 			p := strings.NewReplacer("/", ".").Replace(fmt.Sprintf("%s.%s", k, entry.Key))
-			tree[p] = fmt.Sprintf(`%s`, entry.Value)
+			tree[p] = entry.Value
 		}
 	}
 
