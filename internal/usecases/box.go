@@ -34,15 +34,15 @@ func (b *BoxUseCase) BuildBox(ctx context.Context, service string, stage string,
 	for _, k := range prefixes {
 		entries, _ := b.entryOperations.List(ctx, k)
 		for _, entry := range entries {
-			if entry.Value == nil {
+			if entry.Value == "" {
 				continue
 			}
 			if k == "" {
-				tree[entry.Key] = string(entry.Value)
+				tree[entry.Key] = fmt.Sprintf(`%s`, entry.Value)
 				continue
 			}
 			p := strings.NewReplacer("/", ".").Replace(fmt.Sprintf("%s.%s", k, entry.Key))
-			tree[p] = string(entry.Value)
+			tree[p] = fmt.Sprintf(`%s`, entry.Value)
 		}
 	}
 

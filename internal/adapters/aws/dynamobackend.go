@@ -4,12 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/cenkalti/backoff/v4"
 	"log"
 	"math"
 	"nbox/internal/application"
@@ -18,6 +12,13 @@ import (
 	"nbox/internal/usecases"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/cenkalti/backoff/v4"
 )
 
 const (
@@ -86,7 +87,7 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) er
 	for _, entry := range entries {
 		path := d.pathUseCase.PathWithoutKey(entry.Key)
 		key := d.pathUseCase.BaseKey(entry.Key)
-		records[fmt.Sprintf("%s%s", path, key)] = Record{Path: path, Key: key, Value: entry.Value}
+		records[fmt.Sprintf("%s%s", path, key)] = Record{Path: path, Key: key, Value: []byte(entry.Value)}
 
 		for _, prefix := range d.pathUseCase.Prefixes(entry.Key) {
 			path = d.pathUseCase.PathWithoutKey(prefix)
@@ -139,7 +140,7 @@ func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, requests []types.W
 					batch = output.UnprocessedItems
 					time.Sleep(duration)
 				} else {
-					err = errors.New("dynamodb: timeout handling UnproccessedItems")
+					err = errors.New("dynamodb: timeout handling Unprocessed Items")
 					break
 				}
 			}
@@ -177,7 +178,7 @@ func (d *dynamodbBackend) Retrieve(ctx context.Context, key string) (*models.Ent
 
 	return &models.Entry{
 		Key:   d.pathUseCase.Concat(record.Path, record.Key), // vaultKey(record),
-		Value: record.Value,
+		Value: string(record.Value),
 	}, nil
 }
 
@@ -204,8 +205,9 @@ func (d *dynamodbBackend) List(ctx context.Context, prefix string) ([]models.Ent
 		KeyConditionExpression:    expr.KeyCondition(),
 	}
 	queryPaginator := dynamodb.NewQueryPaginator(d.client, queryInput)
+	var response *dynamodb.QueryOutput
 	for queryPaginator.HasMorePages() {
-		response, err := queryPaginator.NextPage(ctx)
+		response, err = queryPaginator.NextPage(ctx)
 		if err != nil {
 			log.Printf("Err Couldn't query for records released in %v. %v\n", prefix, err)
 			return nil, err
@@ -221,7 +223,7 @@ func (d *dynamodbBackend) List(ctx context.Context, prefix string) ([]models.Ent
 			if !strings.HasPrefix(record.Key, DynamoDBLockPrefix) {
 				entries = append(entries, models.Entry{
 					Key:   record.Key,
-					Value: record.Value,
+					Value: string(record.Value),
 					Path:  record.Path,
 				})
 			}

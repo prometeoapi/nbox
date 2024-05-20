@@ -61,7 +61,6 @@ func Json(w http.ResponseWriter, r *http.Request, optFns ...EnvelopFunc) {
 	w.Header().Set("Content-Type", "application/json")
 	var out []byte
 	envelop := &Envelop{}
-	//var err error
 
 	for _, optFn := range optFns {
 		optFn(envelop)
@@ -76,5 +75,4 @@ func Json(w http.ResponseWriter, r *http.Request, optFns ...EnvelopFunc) {
 
 	out, _ = json.Marshal(envelop.Body)
 	_, _ = w.Write(out)
-	return
 }

@@ -56,7 +56,7 @@ func (p *Processor) GetPrefixes() []string {
 func (p *Processor) Replace(values map[string]string) string {
 	var oldnew []string
 	for _, v := range p.vars {
-		oldnew = append(oldnew, fmt.Sprintf("{%s}", v), values[v])
+		oldnew = append(oldnew, fmt.Sprintf(`{%s}`, v), values[v])
 	}
 	return strings.NewReplacer(oldnew...).Replace(p.tmpl)
 }

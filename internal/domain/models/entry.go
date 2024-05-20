@@ -1,17 +1,16 @@
 package models
 
 import (
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 )
 
 type Entry struct {
-	Path  string          `json:"-"`
-	Key   string          `json:"key"`
-	Value json.RawMessage `json:"value"`
+	Path string `json:"-"`
+	Key  string `json:"key"`
+	//Value json.RawMessage `json:"value"`
+	Value string `json:"value"`
 }
 
 func (e *Entry) String() string {
-	return fmt.Sprintf("Key: %s. Value: %s", e.Key, hex.EncodeToString(e.Value))
+	return fmt.Sprintf("Key: %s. Value: %s", e.Key, e.Value)
 }

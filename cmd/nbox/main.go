@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"go.uber.org/fx"
 	"log"
 	"nbox/internal/adapters/aws"
 	"nbox/internal/application"
@@ -11,6 +10,9 @@ import (
 	"nbox/internal/usecases"
 	"net"
 	"net/http"
+	"time"
+
+	"go.uber.org/fx"
 )
 
 func main() {
@@ -38,8 +40,9 @@ func main() {
 			ctx := context.Background()
 
 			server := &http.Server{
-				Addr:    net.JoinHostPort(address, port),
-				Handler: api.Engine,
+				Addr:              net.JoinHostPort(address, port),
+				Handler:           api.Engine,
+				ReadHeaderTimeout: 30 * time.Second,
 			}
 
 			go func() {

@@ -2,12 +2,13 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
 	"nbox/internal/entrypoints/api/response"
 	"nbox/internal/usecases"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type BoxHandler struct {
