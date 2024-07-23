@@ -7,6 +7,7 @@ import (
 	"nbox/internal/adapters/aws"
 	"nbox/internal/application"
 	"nbox/internal/entrypoints/api"
+	"nbox/internal/entrypoints/api/handlers"
 	"nbox/internal/entrypoints/api/health"
 	"nbox/internal/usecases"
 	"net"
@@ -30,8 +31,8 @@ func main() {
 		fx.Provide(aws.NewDynamodbClient),
 		fx.Provide(aws.NewStoreAdapter),
 		fx.Provide(aws.NewDynamodbBackend),
-		fx.Provide(api.NewEntryHandler),
-		fx.Provide(api.NewBoxHandler),
+		fx.Provide(handlers.NewEntryHandler),
+		fx.Provide(handlers.NewBoxHandler),
 		fx.Provide(usecases.NewPathUseCase),
 		fx.Provide(usecases.NewBox),
 		fx.Provide(application.NewConfig),

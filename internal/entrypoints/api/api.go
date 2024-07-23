@@ -1,6 +1,8 @@
 package api
 
 import (
+	"nbox/internal/entrypoints/api/auth"
+	"nbox/internal/entrypoints/api/handlers"
 	"nbox/internal/entrypoints/api/health"
 	"nbox/internal/entrypoints/api/response"
 	"net/http"
@@ -11,16 +13,18 @@ import (
 	"github.com/go-chi/cors"
 )
 
+const PrefixBasicAuthCredentials = "NBOX_BASIC_AUTH_CREDENTIALS"
+
 type Api struct {
 	Engine http.Handler
 }
 
-func NewApi(box *BoxHandler, entry *EntryHandler, healthCheck *health.Health) *Api {
+func NewApi(box *handlers.BoxHandler, entry *handlers.EntryHandler, healthCheck *health.Health) *Api {
 
 	corsConfig := cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "Clientedni"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: false,
 		MaxAge:           300,
 	})
@@ -36,15 +40,18 @@ func NewApi(box *BoxHandler, entry *EntryHandler, healthCheck *health.Health) *A
 	r.NotFound(response.NotFound)
 	r.MethodNotAllowed(response.MethodNotAllowed)
 
-	r.Post("/api/box", box.UpsertBox)
-	r.Get("/api/box", box.List)
-	r.Head("/api/box/{service}/{stage}/{template}", box.Exist)
-	r.Get("/api/box/{service}/{stage}/{template}", box.Retrieve)
-	r.Get("/api/box/{service}/{stage}/{template}/build", box.Build)
-	r.Post("/api/entry", entry.Upsert)
-	r.Get("/api/entry/key", entry.GetByKey)
-	r.Get("/api/entry/prefix", entry.ListByPrefix)
-	r.Get("/health", entry.ListByPrefix)
+	routesWithAuth := r.Group(func(r chi.Router) {
+		r.Post("/api/box", box.UpsertBox)
+		r.Get("/api/box", box.List)
+		r.Head("/api/box/{service}/{stage}/{template}", box.Exist)
+		r.Get("/api/box/{service}/{stage}/{template}", box.Retrieve)
+		r.Get("/api/box/{service}/{stage}/{template}/build", box.Build)
+		r.Post("/api/entry", entry.Upsert)
+		r.Get("/api/entry/key", entry.GetByKey)
+		r.Get("/api/entry/prefix", entry.ListByPrefix)
+	})
+
+	routesWithAuth.Use(auth.NewBasicAuthFromEnv("api", PrefixBasicAuthCredentials))
 
 	return &Api{
 		Engine: r,
