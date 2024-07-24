@@ -1,5 +1,6 @@
 ### create template
 POST {{baseUrl}}/api/box
+Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 {
@@ -9,7 +10,7 @@ Content-Type: application/json
       "development": {
         "template": {
           "name": "task_definition.json",
-          "value": "{\"ENV_1\":\"{widget-x.development.key}\",\"ENV_2\":\"{widget-x.development.debug}\",\"GLOBAL_SERVICE\":\"{widget-x.sentry}\",\"domain\":\"{private-domain}\"}"
+          "value": "ewogICAiRU5WXzEiOiAie3dpZGdldC14LmRldmVsb3BtZW50LmtleX0iLAogICAiRU5WXzIiOiAie3dpZGdldC14LmRldmVsb3BtZW50LmRlYnVnfSIsCiAgICJHTE9CQUxfU0VSVklDRSI6ICJ7d2lkZ2V0LXguc2VudHJ5fSIsCiAgICJkb21haW4iOiAie3ByaXZhdGUtZG9tYWlufSIsCiAgICJ2ZXJzaW9uIjogIjEiCn0K"
         }
       }
     }
@@ -19,26 +20,31 @@ Content-Type: application/json
 
 ### get all boxes
 GET {{baseUrl}}/api/box
+Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 
 ### check exist template
 HEAD {{baseUrl}}/api/box/widget-x/development/task_definition.json
+Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 
 ### get template
 GET {{baseUrl}}/api/box/widget-x/development/task_definition.json
+Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 
 ### build template
 GET {{baseUrl}}/api/box/widget-x/development/task_definition.json/build
+Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 
 ### create
 POST {{baseUrl}}/api/entry
+Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 [
@@ -52,9 +58,11 @@ Content-Type: application/json
 
 ### Get key
 GET {{baseUrl}}/api/entry/key?v=widget-x/development/domain
+Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 
 ### Get prefix
 GET {{baseUrl}}/api/entry/prefix?v=widget-x/development
 Content-Type: application/json
+Authorization: Basic {{user}} {{pass}}

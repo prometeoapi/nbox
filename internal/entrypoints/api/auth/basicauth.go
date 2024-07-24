@@ -4,12 +4,12 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 )
 
-// BasicAuth implements a simple middleware handler for adding basic http auth to a route.
+// basicAuth implements a simple middleware handler for adding basic http auth to a route.
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication
 func basicAuth(realm string, credentials map[string]string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -44,8 +44,10 @@ func NewBasicAuthFromEnv(realm, prefix string) func(http.Handler) http.Handler {
 	if err != nil {
 		return func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				log.Printf("Err Couldn't unmarshal %s. %v\n", prefix, err)
-				next.ServeHTTP(w, r)
+				//log.Printf("Err Couldn't unmarshal %s. %v\n", prefix, err)
+				//next.ServeHTTP(w, r)
+				unauthorized(w, realm)
+				return
 			})
 		}
 	}

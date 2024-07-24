@@ -3,6 +3,7 @@ package aws
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -40,7 +41,13 @@ func NewStoreAdapter(s3 *s3.Client, config *application.Config, dynamodb *dynamo
 
 func (b *storeAdapter) store(ctx context.Context, path string, stage models.Stage) (*s3.PutObjectOutput, error) {
 	var out bytes.Buffer
-	err := json.Indent(&out, []byte(stage.Template.Value), "", "  ")
+
+	decoded, err := base64.StdEncoding.DecodeString(stage.Template.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Indent(&out, decoded, "", "  ")
 	if err != nil {
 		return nil, err
 	}

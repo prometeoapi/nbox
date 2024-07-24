@@ -40,7 +40,8 @@ func NewApi(box *handlers.BoxHandler, entry *handlers.EntryHandler, healthCheck 
 	r.NotFound(response.NotFound)
 	r.MethodNotAllowed(response.MethodNotAllowed)
 
-	routesWithAuth := r.Group(func(r chi.Router) {
+	r.Group(func(r chi.Router) {
+		r.Use(auth.NewBasicAuthFromEnv("api", PrefixBasicAuthCredentials))
 		r.Post("/api/box", box.UpsertBox)
 		r.Get("/api/box", box.List)
 		r.Head("/api/box/{service}/{stage}/{template}", box.Exist)
@@ -50,8 +51,6 @@ func NewApi(box *handlers.BoxHandler, entry *handlers.EntryHandler, healthCheck 
 		r.Get("/api/entry/key", entry.GetByKey)
 		r.Get("/api/entry/prefix", entry.ListByPrefix)
 	})
-
-	routesWithAuth.Use(auth.NewBasicAuthFromEnv("api", PrefixBasicAuthCredentials))
 
 	return &Api{
 		Engine: r,

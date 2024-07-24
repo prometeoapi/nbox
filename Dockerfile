@@ -32,6 +32,7 @@ RUN apk --update add ca-certificates
 #	Build Stage            #
 #			       #
 ################################
+#FROM golang:1.22 AS prep-build
 FROM public.ecr.aws/docker/library/golang:1.22 AS prep-build
 
 ARG TARGETARCH
@@ -82,7 +83,8 @@ FROM prep-${BUILDMODE} AS package
 # TOOLS
 # image used for production stage
 ################################
-FROM busybox:uclibc AS busybox
+#FROM busybox:uclibc AS busybox
+FROM public.ecr.aws/docker/library/busybox:stable-uclibc AS busybox
 
 
 ################################
@@ -99,7 +101,7 @@ COPY --from=base /etc/group /etc/group
 COPY --from=base /home/$USERNAME/ /home/$USERNAME
 COPY --from=package /workspace/microservice /microservice
 
-COPY --from=busybox /bin/sh /bin/ls /bin/wget /bin/cat /bin/
+COPY --from=busybox /bin/sh /bin/ls /bin/wget /bin/cat /bin/vi /bin/cp /bin/grep /bin/ln /bin/mkdir /bin/ps /bin/
 
 ENV RUN_IN_CONTAINER="True"
 
