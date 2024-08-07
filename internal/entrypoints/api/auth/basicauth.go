@@ -47,9 +47,7 @@ func NewBasicAuthFromEnv(realm, prefix string) func(http.Handler) http.Handler {
 		return func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Err Couldn't unmarshal %s. %v\n", prefix, err)
-				//next.ServeHTTP(w, r)
 				unauthorized(w, realm)
-				return
 			})
 		}
 	}
