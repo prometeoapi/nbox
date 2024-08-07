@@ -18,4 +18,5 @@ type EntryAdapter interface {
 	Upsert(ctx context.Context, entries []models.Entry) error
 	Retrieve(ctx context.Context, key string) (*models.Entry, error)
 	List(ctx context.Context, prefix string) ([]models.Entry, error)
+	Delete(ctx context.Context, key string) error
 }

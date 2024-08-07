@@ -4,6 +4,7 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 )
@@ -40,11 +41,12 @@ func unauthorized(w http.ResponseWriter, realm string) {
 // middleware that will validate incoming requests.
 func NewBasicAuthFromEnv(realm, prefix string) func(http.Handler) http.Handler {
 	credentials := map[string]string{}
+
 	err := json.Unmarshal([]byte(os.Getenv(prefix)), &credentials)
 	if err != nil {
 		return func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				//log.Printf("Err Couldn't unmarshal %s. %v\n", prefix, err)
+				log.Printf("Err Couldn't unmarshal %s. %v\n", prefix, err)
 				//next.ServeHTTP(w, r)
 				unauthorized(w, realm)
 				return

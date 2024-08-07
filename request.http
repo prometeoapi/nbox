@@ -52,7 +52,22 @@ Content-Type: application/json
   {"key": "widget-x/development/key", "value": "bla bla 2"},
   {"key": "widget-x/development/domain", "value": "test.com"},
   {"key": "widget-x.sentry", "value": "xxxxx secret sentry"},
-  {"key": "private-domain", "value": "privatedomain"}
+  {"key": "private-domain", "value": "privatedomain"},
+  {"key": "widget-x/development2/debug", "value": "False"},
+  {"key": "widget-x/development2/key", "value": "bla bla 2"},
+  {"key": "widget-x/development2/domain", "value": "test.com"}
+]
+
+
+### create2
+POST {{baseUrl}}/api/entry
+Authorization: Basic {{user}} {{pass}}
+Content-Type: application/json
+
+[
+  {"key": "widget-x/development3/debug", "value": "False"},
+  {"key": "widget-x/development3/key", "value": "bla bla 2"},
+  {"key": "widget-x/development3/domain", "value": "test.com"}
 ]
 
 
@@ -63,6 +78,12 @@ Content-Type: application/json
 
 
 ### Get prefix
-GET {{baseUrl}}/api/entry/prefix?v=widget-x/development
+GET {{baseUrl}}/api/entry/prefix?v=widget-x/development2
 Content-Type: application/json
 Authorization: Basic {{user}} {{pass}}
+
+
+### Delete key
+DELETE {{baseUrl}}/api/entry/key?v=widget-x/development3
+Authorization: Basic {{user}} {{pass}}
+Content-Type: application/json

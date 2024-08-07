@@ -26,7 +26,8 @@ export AWS_REGION=us-east-1
 export NBOX_ENTRIES_TABLE_NAME=nbox-entries-production
 export NBOX_BOX_TABLE_NAME=nbox-box-production
 export NBOX_BUCKET_NAME=xx-nbox-box-production
-export NBOX_BASIC_AUTH_CREDENTIALS='{"user":"pass"}'
+# export NBOX_BASIC_AUTH_CREDENTIALS='{"user":"pass"}'
+export NBOX_BASIC_AUTH_CREDENTIALS=user:pass,user2:pass
 
 go run cmd/nbox/main.go
 
@@ -49,3 +50,9 @@ EOF
   
 echo $PAYLOAD | base64
 ```
+
+
+## TODO
+- [ ] Enables HTTP Basic authentication. 
+  It accepts a comma-separated list of username:password pairs. 
+  Each pair represents a valid username and password combination for authentication.

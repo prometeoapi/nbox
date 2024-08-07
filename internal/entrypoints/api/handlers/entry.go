@@ -57,3 +57,15 @@ func (h *EntryHandler) GetByKey(w http.ResponseWriter, r *http.Request) {
 
 	response.Success(w, r, entry)
 }
+
+func (h *EntryHandler) DeleteKey(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	key := r.URL.Query().Get("v")
+	err := h.entryAdapter.Delete(ctx, key)
+	if err != nil {
+		response.Error(w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	response.Success(w, r, map[string]string{"message": "ok"})
+}

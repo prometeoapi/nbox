@@ -50,6 +50,7 @@ func NewApi(box *handlers.BoxHandler, entry *handlers.EntryHandler, healthCheck 
 		r.Post("/api/entry", entry.Upsert)
 		r.Get("/api/entry/key", entry.GetByKey)
 		r.Get("/api/entry/prefix", entry.ListByPrefix)
+		r.Delete("/api/entry/key", entry.DeleteKey)
 	})
 
 	return &Api{

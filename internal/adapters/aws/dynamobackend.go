@@ -10,6 +10,7 @@ import (
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
 	"nbox/internal/usecases"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,11 +31,24 @@ type PermitPool struct {
 	sem chan int
 }
 
+//type BackendRecord interface {
+//	GetMetadata()
+//}
+
+type RecordBase struct {
+	Key      string          `dynamodbav:"Key"`
+	Value    []byte          `dynamodbav:"Value"`
+	Metadata models.Metadata `dynamodbav:"Metadata"`
+}
+
 type Record struct {
-	Path  string `dynamodbav:"Path"`
-	Key   string `dynamodbav:"Key"`
-	Value []byte `dynamodbav:"Value"`
-	//Version models.VersionMetadata `dynamodbav:"Version"`
+	Path string `dynamodbav:"Path"`
+	*RecordBase
+}
+
+type RecordTracking struct {
+	Timestamp string `dynamodbav:"Timestamp"`
+	*RecordBase
 }
 
 func NewPermitPool(permits int) *PermitPool {
@@ -61,6 +75,7 @@ func (c *PermitPool) CurrentPermits() int {
 	return len(c.sem)
 }
 
+// dynamodbBackend aws docs https://aws.github.io/aws-sdk-go-v2/docs/
 type dynamodbBackend struct {
 	client      *dynamodb.Client
 	config      *application.Config
@@ -79,30 +94,73 @@ func NewDynamodbBackend(dynamodb *dynamodb.Client, config *application.Config, p
 
 // Upsert is used to insert or update an entry
 func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) error {
-	var writeReqs []types.WriteRequest
-	var item map[string]types.AttributeValue
-	var err error
-
 	records := map[string]Record{}
+	tracking := map[string]RecordTracking{}
+
 	for _, entry := range entries {
+		now := time.Now().UTC()
 		path := d.pathUseCase.PathWithoutKey(entry.Key)
 		key := d.pathUseCase.BaseKey(entry.Key)
-		records[fmt.Sprintf("%s%s", path, key)] = Record{Path: path, Key: key, Value: []byte(entry.Value)}
+
+		metadata := models.Metadata{
+			UpdatedAt: now,
+			UpdatedBy: "test",
+		}
+
+		records[fmt.Sprintf("%s/%s", path, key)] = Record{
+			Path: path,
+			RecordBase: &RecordBase{
+				Key:      key,
+				Value:    []byte(entry.Value),
+				Metadata: metadata,
+			},
+		}
+
+		tracking[entry.Key] = RecordTracking{
+			Timestamp: strconv.FormatInt(now.Unix(), 10),
+			RecordBase: &RecordBase{
+				Key:      entry.Key,
+				Value:    []byte(entry.Value),
+				Metadata: metadata,
+			},
+		}
 
 		for _, prefix := range d.pathUseCase.Prefixes(entry.Key) {
 			path = d.pathUseCase.PathWithoutKey(prefix)
 			key = fmt.Sprintf("%s/", d.pathUseCase.BaseKey(prefix))
 			records[fmt.Sprintf("%s%s", path, key)] = Record{
-				Path: path,
-				Key:  key,
+				Path:       path,
+				RecordBase: &RecordBase{Key: key, Metadata: metadata},
 			}
 		}
 	}
 
-	for _, r := range records {
+	ch := make(chan error)
+
+	go func(channel chan error) {
+		channel <- d.writeReqsBatch(ctx, d.config.EntryTableName, prepareWriteRequest(records))
+		channel <- d.writeReqsBatch(ctx, d.config.TrackingEntryTableName, prepareWriteRequest(tracking))
+	}(ch)
+
+	result1 := <-ch
+	result2 := <-ch
+
+	if result2 != nil {
+		log.Printf("Err save tracking. %v \n", result2)
+	}
+
+	return result1
+}
+
+func prepareWriteRequest[T any](items map[string]T) []types.WriteRequest {
+	var writeReqs []types.WriteRequest
+	var item map[string]types.AttributeValue
+	var err error
+
+	for _, r := range items {
 		item, err = attributevalue.MarshalMap(r)
 		if err != nil {
-			log.Printf("Err could not convert prefix record to DynamoDB item: %v", err)
+			log.Printf("Err could not convert Record to DynamoDB item: %v", err)
 			continue
 		}
 		writeReqs = append(
@@ -110,14 +168,48 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) er
 		)
 	}
 
-	return d.writeReqsBatch(ctx, writeReqs)
+	return writeReqs
 }
 
-func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, requests []types.WriteRequest) error {
+//func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) error {
+//	var writeReqs []types.WriteRequest
+//	items := map[string]map[string]types.AttributeValue{}
+//
+//	for _, entry := range entries {
+//		path := d.pathUseCase.PathWithoutKey(entry.Key)
+//		key := d.pathUseCase.BaseKey(entry.Key)
+//
+//		items[fmt.Sprintf("%s/%s", path, key)] = map[string]types.AttributeValue{
+//			"Path":  &types.AttributeValueMemberS{Value: path},
+//			"Key":   &types.AttributeValueMemberS{Value: key},
+//			"Value": &types.AttributeValueMemberB{Value: []byte(entry.Value)},
+//		}
+//
+//		for _, prefix := range d.pathUseCase.Prefixes(entry.Key) {
+//			path = d.pathUseCase.PathWithoutKey(prefix)
+//			key = fmt.Sprintf("%s/", d.pathUseCase.BaseKey(prefix))
+//
+//			items[fmt.Sprintf("%s%s", path, key)] = map[string]types.AttributeValue{
+//				"Path": &types.AttributeValueMemberS{Value: path},
+//				"Key":  &types.AttributeValueMemberS{Value: key},
+//			}
+//		}
+//	}
+//
+//	for _, a := range items {
+//		writeReqs = append(
+//			writeReqs, types.WriteRequest{PutRequest: &types.PutRequest{Item: a}},
+//		)
+//	}
+//
+//	return d.writeReqsBatch(ctx, writeReqs)
+//}
+
+func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, tableName string, requests []types.WriteRequest) error {
 	for len(requests) > 0 {
 		var err error
 		batchSize := int(math.Min(float64(len(requests)), 25))
-		batch := map[string][]types.WriteRequest{d.config.EntryTableName: requests[:batchSize]}
+		batch := map[string][]types.WriteRequest{tableName: requests[:batchSize]}
 		requests = requests[batchSize:]
 
 		d.permitPool.Acquire()
@@ -129,21 +221,24 @@ func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, requests []types.W
 			output, err = d.client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
 				RequestItems: batch,
 			})
+
 			if err != nil {
 				break
 			}
+
 			if len(output.UnprocessedItems) == 0 {
 				break
-			} else {
-				duration := boff.NextBackOff()
-				if duration != backoff.Stop {
-					batch = output.UnprocessedItems
-					time.Sleep(duration)
-				} else {
-					err = errors.New("dynamodb: timeout handling Unprocessed Items")
-					break
-				}
 			}
+
+			duration := boff.NextBackOff()
+			if duration != backoff.Stop {
+				batch = output.UnprocessedItems
+				time.Sleep(duration)
+			} else {
+				err = errors.New("dynamodb: timeout handling Unprocessed Items")
+				break
+			}
+
 		}
 		d.permitPool.Release()
 		if err != nil {
@@ -231,4 +326,36 @@ func (d *dynamodbBackend) List(ctx context.Context, prefix string) ([]models.Ent
 	}
 
 	return entries, nil
+}
+
+func (d *dynamodbBackend) Delete(ctx context.Context, key string) error {
+
+	p, _ := attributevalue.Marshal(d.pathUseCase.PathWithoutKey(key))
+	k, _ := attributevalue.Marshal(d.pathUseCase.BaseKey(key))
+
+	requests := []types.WriteRequest{
+		{
+			DeleteRequest: &types.DeleteRequest{
+				Key: map[string]types.AttributeValue{"Path": p, "Key": k},
+			},
+		},
+	}
+
+	entries, _ := d.List(ctx, key)
+
+	// children
+	for _, e := range entries {
+		pEntry, _ := attributevalue.Marshal(e.Path)
+		kEntry, _ := attributevalue.Marshal(e.Key)
+
+		requests = append(requests, types.WriteRequest{
+			DeleteRequest: &types.DeleteRequest{
+				Key: map[string]types.AttributeValue{
+					"Path": pEntry, "Key": kEntry,
+				},
+			},
+		})
+	}
+
+	return d.writeReqsBatch(ctx, d.config.EntryTableName, requests)
 }
