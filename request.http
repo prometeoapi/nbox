@@ -48,14 +48,7 @@ Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 [
-  {"key": "widget-x/development/debug", "value": "False"},
-  {"key": "widget-x/development/key", "value": "bla bla 2"},
-  {"key": "widget-x/development/domain", "value": "test.com"},
-  {"key": "widget-x.sentry", "value": "xxxxx secret sentry"},
-  {"key": "private-domain", "value": "privatedomain"},
-  {"key": "widget-x/development2/debug", "value": "False"},
-  {"key": "widget-x/development2/key", "value": "bla bla 2"},
-  {"key": "widget-x/development2/domain", "value": "test.com"}
+  {"key": "test/qa/var001", "value": "test.com"}
 ]
 
 
@@ -99,7 +92,7 @@ Authorization: Basic {{user}} {{pass}}
 
 
 ### list tracking history
-GET {{baseUrl}}/api/tracking/key?v=widget-x/development3/domain
+GET {{baseUrl}}/api/track/key?v=widget-x/development3/domain
 Content-Type: application/json
 Authorization: Basic {{user}} {{pass}}
 

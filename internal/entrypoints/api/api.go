@@ -52,7 +52,7 @@ func NewApi(box *handlers.BoxHandler, entry *handlers.EntryHandler, healthCheck 
 		r.Get("/api/entry/key", entry.GetByKey)
 		r.Get("/api/entry/prefix", entry.ListByPrefix)
 		r.Delete("/api/entry/key", entry.DeleteKey)
-		r.Get("/api/tracking/key", entry.Tracking)
+		r.Get("/api/track/key", entry.Tracking)
 	})
 
 	return &Api{
