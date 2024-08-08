@@ -59,15 +59,30 @@ Content-Type: application/json
 ]
 
 
-### create2
+### testing create
 POST {{baseUrl}}/api/entry
 Authorization: Basic {{user}} {{pass}}
 Content-Type: application/json
 
 [
-  {"key": "widget-x/development3/debug", "value": "False"},
-  {"key": "widget-x/development3/key", "value": "bla bla 2"},
-  {"key": "widget-x/development3/domain", "value": "test.com"}
+  {
+    "key": "widget-x/development3/debug",
+    "value": "False"
+  },
+  {
+    "key": "widget-x/development3/key",
+    "value": "bla bla 2"
+  },
+  {
+    "key": "widget-x/development3/domain",
+    "value": "test.com",
+    "secure": true
+  },
+  {
+    "key": "widget-x/development3/api-key",
+    "value": "qwertyuiopsdfghjklzxcvbnm",
+    "secure": true
+  }
 ]
 
 
@@ -78,7 +93,13 @@ Content-Type: application/json
 
 
 ### Get prefix
-GET {{baseUrl}}/api/entry/prefix?v=widget-x/development2
+GET {{baseUrl}}/api/entry/prefix?v=widget-x/development3
+Content-Type: application/json
+Authorization: Basic {{user}} {{pass}}
+
+
+### list tracking history
+GET {{baseUrl}}/api/tracking/key?v=widget-x/development3/domain
 Content-Type: application/json
 Authorization: Basic {{user}} {{pass}}
 

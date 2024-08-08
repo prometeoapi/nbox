@@ -5,15 +5,17 @@ import (
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
 	"nbox/internal/entrypoints/api/response"
+	"nbox/internal/usecases"
 	"net/http"
 )
 
 type EntryHandler struct {
 	entryAdapter domain.EntryAdapter
+	entryUseCase *usecases.EntryUseCase
 }
 
-func NewEntryHandler(entryAdapter domain.EntryAdapter) *EntryHandler {
-	return &EntryHandler{entryAdapter: entryAdapter}
+func NewEntryHandler(entryAdapter domain.EntryAdapter, entryUseCase *usecases.EntryUseCase) *EntryHandler {
+	return &EntryHandler{entryAdapter: entryAdapter, entryUseCase: entryUseCase}
 }
 
 func (h *EntryHandler) Upsert(w http.ResponseWriter, r *http.Request) {
@@ -25,12 +27,13 @@ func (h *EntryHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.entryAdapter.Upsert(ctx, entries)
-	if err != nil {
-		response.Error(w, r, err, http.StatusBadRequest)
-		return
-	}
-	response.Success(w, r, map[string]string{"message": "ok"})
+	//results := h.entryUseCase.Upsert(ctx, entries)
+	//err := h.entryAdapter.Upsert(ctx, entries)
+	//if err != nil {
+	//	response.Error(w, r, err, http.StatusBadRequest)
+	//	return
+	//}
+	response.Success(w, r, h.entryUseCase.Upsert(ctx, entries))
 }
 
 func (h *EntryHandler) ListByPrefix(w http.ResponseWriter, r *http.Request) {
@@ -68,4 +71,17 @@ func (h *EntryHandler) DeleteKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Success(w, r, map[string]string{"message": "ok"})
+}
+
+func (h *EntryHandler) Tracking(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	key := r.URL.Query().Get("v")
+
+	entries, err := h.entryAdapter.Tracking(ctx, key)
+	if err != nil {
+		response.Error(w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	response.Success(w, r, entries)
 }

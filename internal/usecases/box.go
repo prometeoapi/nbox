@@ -8,11 +8,11 @@ import (
 )
 
 type BoxUseCase struct {
-	boxOperation    domain.StoreOperations
+	boxOperation    domain.TemplateAdapter
 	entryOperations domain.EntryAdapter
 }
 
-func NewBox(boxOperation domain.StoreOperations, entryOperations domain.EntryAdapter) *BoxUseCase {
+func NewBox(boxOperation domain.TemplateAdapter, entryOperations domain.EntryAdapter) *BoxUseCase {
 	return &BoxUseCase{
 		boxOperation:    boxOperation,
 		entryOperations: entryOperations,

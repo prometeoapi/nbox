@@ -1,10 +1,12 @@
 package auth
 
 import (
+	"context"
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"log"
+	"nbox/internal/application"
 	"net/http"
 	"os"
 )
@@ -14,6 +16,7 @@ import (
 func basicAuth(realm string, credentials map[string]string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
 			user, pass, ok := r.BasicAuth()
 			if !ok {
 				unauthorized(w, realm)
@@ -26,7 +29,8 @@ func basicAuth(realm string, credentials map[string]string) func(next http.Handl
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			ctx = context.WithValue(ctx, application.RequestUserName, user)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

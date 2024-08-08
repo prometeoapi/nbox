@@ -7,6 +7,8 @@ type Config struct {
 	EntryTableName         string `pkl:"entryTableName"`
 	TrackingEntryTableName string `pkl:"trackingEntryTableName"`
 	BoxTableName           string `pkl:"boxTableName"`
+	RegionName             string `pkl:"regionName"`
+	AccountId              string `pkl:"accountId"`
 }
 
 func NewConfig() *Config {
@@ -28,5 +30,7 @@ func NewConfig() *Config {
 		EntryTableName:         os.Getenv("NBOX_ENTRIES_TABLE_NAME"),
 		TrackingEntryTableName: os.Getenv("NBOX_TRACKING_ENTRIES_TABLE_NAME"),
 		BoxTableName:           os.Getenv("NBOX_BOX_TABLE_NAME"),
+		AccountId:              os.Getenv("ACCOUNT_ID"),
+		RegionName:             os.Getenv("AWS_REGION"),
 	}
 }

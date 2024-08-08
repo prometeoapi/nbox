@@ -47,10 +47,12 @@ func NewApi(box *handlers.BoxHandler, entry *handlers.EntryHandler, healthCheck 
 		r.Head("/api/box/{service}/{stage}/{template}", box.Exist)
 		r.Get("/api/box/{service}/{stage}/{template}", box.Retrieve)
 		r.Get("/api/box/{service}/{stage}/{template}/build", box.Build)
+
 		r.Post("/api/entry", entry.Upsert)
 		r.Get("/api/entry/key", entry.GetByKey)
 		r.Get("/api/entry/prefix", entry.ListByPrefix)
 		r.Delete("/api/entry/key", entry.DeleteKey)
+		r.Get("/api/tracking/key", entry.Tracking)
 	})
 
 	return &Api{

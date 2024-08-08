@@ -1,9 +1,13 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Metadata struct {
-	Hash      string    `dynamodbav:"Hash,omitempty"`
-	UpdatedAt time.Time `dynamodbav:"UpdatedAt,unixtime"`
-	UpdatedBy string    `dynamodbav:"UpdatedBy,omitempty"`
+	Hash      string    `json:"hash" dynamodbav:"Hash,omitempty"`
+	Secure    bool      `json:"secure" dynamodbav:"Secure"`
+	Action    string    `json:"action" dynamodbav:"Action,omitempty"`
+	UpdatedAt time.Time `json:"updatedAt" dynamodbav:"UpdatedAt,unixtime"`
+	UpdatedBy string    `json:"updatedBy" dynamodbav:"UpdatedBy,omitempty"`
 }

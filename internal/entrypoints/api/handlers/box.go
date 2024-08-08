@@ -12,11 +12,11 @@ import (
 )
 
 type BoxHandler struct {
-	store      domain.StoreOperations
+	store      domain.TemplateAdapter
 	boxUseCase *usecases.BoxUseCase
 }
 
-func NewBoxHandler(store domain.StoreOperations, boxUseCase *usecases.BoxUseCase) *BoxHandler {
+func NewBoxHandler(store domain.TemplateAdapter, boxUseCase *usecases.BoxUseCase) *BoxHandler {
 	return &BoxHandler{store: store, boxUseCase: boxUseCase}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
 func NewAwsConfig() *aws.Config {
@@ -24,4 +25,8 @@ func NewS3Client(cfg *aws.Config) *s3.Client {
 
 func NewDynamodbClient(cfg *aws.Config) *dynamodb.Client {
 	return dynamodb.NewFromConfig(*cfg)
+}
+
+func NewSsmClient(cfg *aws.Config) *ssm.Client {
+	return ssm.NewFromConfig(*cfg)
 }
