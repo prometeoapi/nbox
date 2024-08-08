@@ -177,6 +177,7 @@ func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, tableName string, 
 	for len(requests) > 0 {
 		var err error
 		var output *dynamodb.BatchWriteItemOutput
+		unprocessed := map[string][]types.WriteRequest{}
 
 		batchSize := int(math.Min(float64(len(requests)), 25))
 		batch := map[string][]types.WriteRequest{tableName: requests[:batchSize]}
@@ -201,6 +202,7 @@ func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, tableName string, 
 			}
 
 			duration := boff.NextBackOff()
+			unprocessed = output.UnprocessedItems
 			if duration != backoff.Stop {
 				batch = output.UnprocessedItems
 				time.Sleep(duration)
@@ -212,10 +214,10 @@ func (d *dynamodbBackend) writeReqsBatch(ctx context.Context, tableName string, 
 		}
 		d.permitPool.Release()
 		if err != nil {
-			return BatchResult{Out: output.UnprocessedItems, Err: err}
+			return BatchResult{Out: unprocessed, Err: err}
 		}
 	}
-	return BatchResult{}
+	return BatchResult{Out: nil, Err: nil}
 }
 
 // Retrieve Get is used to fetch an entry
