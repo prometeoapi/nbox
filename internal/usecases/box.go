@@ -2,47 +2,43 @@ package usecases
 
 import (
 	"context"
-	"fmt"
 	"nbox/internal/domain"
 	"strings"
 )
 
 type BoxUseCase struct {
-	boxOperation    domain.TemplateAdapter
-	entryOperations domain.EntryAdapter
+	templateAdapter domain.TemplateAdapter
+	entryAdapter    domain.EntryAdapter
+	pathUseCase     *PathUseCase
 }
 
-func NewBox(boxOperation domain.TemplateAdapter, entryOperations domain.EntryAdapter) *BoxUseCase {
+func NewBox(boxOperation domain.TemplateAdapter, entryOperations domain.EntryAdapter, pathUseCase *PathUseCase) *BoxUseCase {
 	return &BoxUseCase{
-		boxOperation:    boxOperation,
-		entryOperations: entryOperations,
+		templateAdapter: boxOperation,
+		entryAdapter:    entryOperations,
+		pathUseCase:     pathUseCase,
 	}
 }
 
 func (b *BoxUseCase) BuildBox(ctx context.Context, service string, stage string, template string) (string, error) {
-	box, err := b.boxOperation.RetrieveBox(ctx, service, stage, template)
+	box, err := b.templateAdapter.RetrieveBox(ctx, service, stage, template)
 	if err != nil {
 		return "", err
 	}
 
-	tmpl := string(box)
+	tmpl := strings.NewReplacer(":stage", stage, ":service", service).Replace(string(box))
 	proc := NewProcessor(tmpl)
 	prefixes := proc.GetPrefixes()
 
 	tree := map[string]string{}
 
 	for _, k := range prefixes {
-		entries, _ := b.entryOperations.List(ctx, k)
+		entries, _ := b.entryAdapter.List(ctx, k)
 		for _, entry := range entries {
-			if entry.Value == "" {
-				continue
+			if k == strings.TrimSpace(entry.Path) {
+				p := b.pathUseCase.Concat(k, entry.Key)
+				tree[p] = entry.Value
 			}
-			if k == "" {
-				tree[entry.Key] = entry.Value
-				continue
-			}
-			p := strings.NewReplacer("/", ".").Replace(fmt.Sprintf("%s.%s", k, entry.Key))
-			tree[p] = entry.Value
 		}
 	}
 

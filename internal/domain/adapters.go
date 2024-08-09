@@ -25,5 +25,4 @@ type EntryAdapter interface {
 // SecretAdapter vars encrypt
 type SecretAdapter interface {
 	Upsert(ctx context.Context, entries []models.Entry) map[string]error
-	//Delete(ctx context.Context, key string) error
 }
