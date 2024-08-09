@@ -72,8 +72,13 @@ func (b *BoxHandler) Build(w http.ResponseWriter, r *http.Request) {
 	service := chi.URLParam(r, "service")
 	stage := chi.URLParam(r, "stage")
 	template := chi.URLParam(r, "template")
+	args := make(map[string]string)
 
-	data, err := b.boxUseCase.BuildBox(ctx, service, stage, template)
+	for key := range r.URL.Query() {
+		args[key] = r.URL.Query().Get(key)
+	}
+
+	data, err := b.boxUseCase.BuildBox(ctx, service, stage, template, args)
 	if err != nil {
 		response.Error(w, r, err, http.StatusNotFound)
 		return

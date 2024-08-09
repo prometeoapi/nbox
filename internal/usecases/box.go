@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 	"nbox/internal/domain"
 	"strings"
 )
@@ -20,13 +21,13 @@ func NewBox(boxOperation domain.TemplateAdapter, entryOperations domain.EntryAda
 	}
 }
 
-func (b *BoxUseCase) BuildBox(ctx context.Context, service string, stage string, template string) (string, error) {
+func (b *BoxUseCase) BuildBox(ctx context.Context, service string, stage string, template string, args map[string]string) (string, error) {
 	box, err := b.templateAdapter.RetrieveBox(ctx, service, stage, template)
 	if err != nil {
 		return "", err
 	}
 
-	tmpl := strings.NewReplacer(":stage", stage, ":service", service).Replace(string(box))
+	tmpl := b.VarsBuilder(string(box), service, stage, template, args)
 	proc := NewProcessor(tmpl)
 	prefixes := proc.GetPrefixes()
 
@@ -43,4 +44,19 @@ func (b *BoxUseCase) BuildBox(ctx context.Context, service string, stage string,
 	}
 
 	return proc.Replace(tree), nil
+}
+
+func (b *BoxUseCase) VarsBuilder(tmpl string, service string, stage string, template string, args map[string]string) string {
+
+	oldnew := []string{
+		":service", service,
+		":stage", stage,
+		":template", template,
+	}
+
+	for k, v := range args {
+		oldnew = append(oldnew, fmt.Sprintf(":%s", strings.TrimSpace(k)), v)
+	}
+
+	return strings.NewReplacer(oldnew...).Replace(tmpl)
 }

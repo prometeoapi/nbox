@@ -65,7 +65,7 @@ func TestBoxUseCase_BuildBox(t *testing.T) {
 	mockEntry := &mockEntryAdapter{}
 
 	useCase := NewBox(mockTemplate, mockEntry, NewPathUseCase())
-	results, err := useCase.BuildBox(context.Background(), "test", "development", "test.json")
+	results, err := useCase.BuildBox(context.Background(), "test", "development", "test.json", map[string]string{})
 
 	fmt.Println(results)
 
