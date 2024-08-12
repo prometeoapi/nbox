@@ -56,7 +56,7 @@ func (s *secureParameterStore) Upsert(ctx context.Context, entries []models.Entr
 }
 
 func (s *secureParameterStore) Send(ctx context.Context, entry models.Entry) Result {
-	in := prepareSecret(entry, s.config.ParameterStoreDefaultTier)
+	in := prepareSecret(entry, s.config.ParameterStoreDefaultTier, s.config.ParameterStoreKeyId)
 	out, err := s.client.PutParameter(ctx, in)
 	result := Result{Out: out, In: &entry, Err: err}
 
@@ -82,27 +82,28 @@ func (s *secureParameterStore) AddTags(ctx context.Context, key *string) {
 	}
 }
 
-//func (s *secureParameterStore) Delete(ctx context.Context, key string) error {
-//	//TODO implement me
-//	panic("implement me")
-//}
-
-func prepareSecret(entry models.Entry, parameterStoreDefaultTier string) *ssm.PutParameterInput {
+func prepareSecret(entry models.Entry, parameterStoreDefaultTier string, parameterStoreKeyId string) *ssm.PutParameterInput {
 	key := entry.Key
-	defaultTier := types.ParameterTier(parameterStoreDefaultTier)
-	if parameterStoreDefaultTier == "" {
-		defaultTier = types.ParameterTierStandard
-	}
 
 	if !strings.HasPrefix(key, "/") {
 		key = "/" + key
 	}
 
-	return &ssm.PutParameterInput{
+	parameterInput := &ssm.PutParameterInput{
 		Name:      aws.String(key),
 		Value:     aws.String(entry.Value),
 		Type:      types.ParameterTypeSecureString,
-		Tier:      defaultTier,
+		Tier:      types.ParameterTierStandard,
 		Overwrite: aws.Bool(true),
 	}
+
+	if parameterStoreDefaultTier != "" {
+		parameterInput.Tier = types.ParameterTier(parameterStoreDefaultTier)
+	}
+
+	if parameterStoreKeyId != "" {
+		parameterInput.KeyId = aws.String(parameterStoreKeyId)
+	}
+
+	return parameterInput
 }

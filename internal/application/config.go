@@ -10,6 +10,7 @@ type Config struct {
 	RegionName                string `pkl:"regionName"`
 	AccountId                 string `pkl:"accountId"`
 	ParameterStoreDefaultTier string `pkl:"parameterStoreDefaultTier"`
+	ParameterStoreKeyId       string `pkl:"parameterStoreKeyId"`
 }
 
 func NewConfig() *Config {
@@ -35,5 +36,6 @@ func NewConfig() *Config {
 		AccountId:                 os.Getenv("ACCOUNT_ID"),
 		RegionName:                os.Getenv("AWS_REGION"),
 		ParameterStoreDefaultTier: os.Getenv("NBOX_PARAMETER_STORE_DEFAULT_TIER"), // Standard | Advanced
+		ParameterStoreKeyId:       os.Getenv("NBOX_PARAMETER_STORE_KEY_ID"),       // KMS KEY ID
 	}
 }
