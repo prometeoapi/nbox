@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"log"
+	"nbox/internal/application"
 	"nbox/internal/domain"
 	"nbox/internal/domain/models"
 	"strings"
@@ -18,10 +19,11 @@ type Result models.Exchange[*ssm.PutParameterOutput, *models.Entry]
 
 type secureParameterStore struct {
 	client *ssm.Client
+	config *application.Config
 }
 
-func NewSecureParameterStore(client *ssm.Client) domain.SecretAdapter {
-	return &secureParameterStore{client: client}
+func NewSecureParameterStore(client *ssm.Client, config *application.Config) domain.SecretAdapter {
+	return &secureParameterStore{client: client, config: config}
 }
 
 func (s *secureParameterStore) Upsert(ctx context.Context, entries []models.Entry) map[string]error {
@@ -54,7 +56,7 @@ func (s *secureParameterStore) Upsert(ctx context.Context, entries []models.Entr
 }
 
 func (s *secureParameterStore) Send(ctx context.Context, entry models.Entry) Result {
-	in := prepareSecret(entry)
+	in := prepareSecret(entry, s.config.ParameterStoreDefaultTier)
 	out, err := s.client.PutParameter(ctx, in)
 	result := Result{Out: out, In: &entry, Err: err}
 
@@ -85,8 +87,12 @@ func (s *secureParameterStore) AddTags(ctx context.Context, key *string) {
 //	panic("implement me")
 //}
 
-func prepareSecret(entry models.Entry) *ssm.PutParameterInput {
+func prepareSecret(entry models.Entry, parameterStoreDefaultTier string) *ssm.PutParameterInput {
 	key := entry.Key
+	defaultTier := types.ParameterTier(parameterStoreDefaultTier)
+	if parameterStoreDefaultTier == "" {
+		defaultTier = types.ParameterTierStandard
+	}
 
 	if !strings.HasPrefix(key, "/") {
 		key = "/" + key
@@ -96,7 +102,7 @@ func prepareSecret(entry models.Entry) *ssm.PutParameterInput {
 		Name:      aws.String(key),
 		Value:     aws.String(entry.Value),
 		Type:      types.ParameterTypeSecureString,
-		Tier:      types.ParameterTierStandard,
+		Tier:      defaultTier,
 		Overwrite: aws.Bool(true),
 	}
 }

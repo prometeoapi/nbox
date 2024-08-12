@@ -3,12 +3,13 @@ package application
 import "os"
 
 type Config struct {
-	BucketName             string `pkl:"bucketName"`
-	EntryTableName         string `pkl:"entryTableName"`
-	TrackingEntryTableName string `pkl:"trackingEntryTableName"`
-	BoxTableName           string `pkl:"boxTableName"`
-	RegionName             string `pkl:"regionName"`
-	AccountId              string `pkl:"accountId"`
+	BucketName                string `pkl:"bucketName"`
+	EntryTableName            string `pkl:"entryTableName"`
+	TrackingEntryTableName    string `pkl:"trackingEntryTableName"`
+	BoxTableName              string `pkl:"boxTableName"`
+	RegionName                string `pkl:"regionName"`
+	AccountId                 string `pkl:"accountId"`
+	ParameterStoreDefaultTier string `pkl:"parameterStoreDefaultTier"`
 }
 
 func NewConfig() *Config {
@@ -25,12 +26,14 @@ func NewConfig() *Config {
 	//	panic(err)
 	//}
 	//return &cfg
+
 	return &Config{
-		BucketName:             os.Getenv("NBOX_BUCKET_NAME"),
-		EntryTableName:         os.Getenv("NBOX_ENTRIES_TABLE_NAME"),
-		TrackingEntryTableName: os.Getenv("NBOX_TRACKING_ENTRIES_TABLE_NAME"),
-		BoxTableName:           os.Getenv("NBOX_BOX_TABLE_NAME"),
-		AccountId:              os.Getenv("ACCOUNT_ID"),
-		RegionName:             os.Getenv("AWS_REGION"),
+		BucketName:                os.Getenv("NBOX_BUCKET_NAME"),
+		EntryTableName:            os.Getenv("NBOX_ENTRIES_TABLE_NAME"),
+		TrackingEntryTableName:    os.Getenv("NBOX_TRACKING_ENTRIES_TABLE_NAME"),
+		BoxTableName:              os.Getenv("NBOX_BOX_TABLE_NAME"),
+		AccountId:                 os.Getenv("ACCOUNT_ID"),
+		RegionName:                os.Getenv("AWS_REGION"),
+		ParameterStoreDefaultTier: os.Getenv("NBOX_PARAMETER_STORE_DEFAULT_TIER"), // Standard | Advanced
 	}
 }
