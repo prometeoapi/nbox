@@ -38,7 +38,7 @@ func main() {
 		fx.Provide(usecases.NewPathUseCase),
 		fx.Provide(usecases.NewEntryUseCase),
 		fx.Provide(usecases.NewBox),
-		fx.Provide(application.NewConfig),
+		fx.Provide(application.NewConfigFromEnv),
 		fx.Provide(api.NewApi),
 		fx.Provide(health.NewHealthy),
 		fx.Invoke(func(api *api.Api, config *application.Config) {

@@ -69,6 +69,10 @@ func (e *EntryUseCase) Upsert(ctx context.Context, entries []models.Entry) map[s
 }
 
 func (e *EntryUseCase) GetParameterArn(key string) string {
+	if e.config.ParameterShortArn && !strings.HasPrefix(key, "/") {
+		return "/" + key
+	}
+
 	if e.config.ParameterShortArn {
 		return key
 	}

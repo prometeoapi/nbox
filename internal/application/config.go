@@ -18,20 +18,43 @@ type Config struct {
 	ParameterShortArn         bool   `pkl:"parameterShortArn"`
 }
 
-func NewConfig() *Config {
-	//evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//defer func(e pkl.Evaluator) {
-	//	_ = e.Close()
-	//}(evaluator)
-	//
-	//var cfg Config
-	//if err = evaluator.EvaluateModule(context.Background(), pkl.FileSource("config.pkl"), &cfg); err != nil {
-	//	panic(err)
-	//}
-	//return &cfg
+//func NewConfigFromPkl()  {
+//	evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
+//	if err != nil {
+//		panic(err)
+//	}
+//	defer func(e pkl.Evaluator) {
+//		_ = e.Close()
+//	}(evaluator)
+//
+//	var cfg Config
+//	if err = evaluator.EvaluateModule(context.Background(), pkl.FileSource("config.pkl"), &cfg); err != nil {
+//		panic(err)
+//	}
+//	return &cfg
+//}
+
+//func NewConfigFromYaml()  {
+//	config := &Config{}
+//
+//	viper.SetConfigName(ConfigName)
+//	viper.SetConfigType("yaml")
+//	viper.AddConfigPath(ConfigPath)
+//
+//	err := viper.ReadInConfig()
+//	if err != nil { // Handle errs reading the config file
+//		panic(fmt.Errorf("fatal error config file: %w", err))
+//	}
+//
+//	err = viper.Unmarshal(&config)
+//	if err != nil {
+//		log.Error("Environment can't be loaded", zap.Error(err))
+//	}
+//
+//	return config
+//}
+
+func NewConfigFromEnv() *Config {
 
 	return &Config{
 		BucketName:                env("NBOX_BUCKET_NAME", "nbox-store"),
