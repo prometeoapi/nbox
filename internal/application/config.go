@@ -1,6 +1,10 @@
 package application
 
-import "os"
+import (
+	"os"
+	"strconv"
+	"strings"
+)
 
 type Config struct {
 	BucketName                string `pkl:"bucketName"`
@@ -11,6 +15,7 @@ type Config struct {
 	AccountId                 string `pkl:"accountId"`
 	ParameterStoreDefaultTier string `pkl:"parameterStoreDefaultTier"`
 	ParameterStoreKeyId       string `pkl:"parameterStoreKeyId"`
+	ParameterShortArn         bool   `pkl:"parameterShortArn"`
 }
 
 func NewConfig() *Config {
@@ -29,13 +34,40 @@ func NewConfig() *Config {
 	//return &cfg
 
 	return &Config{
-		BucketName:                os.Getenv("NBOX_BUCKET_NAME"),
-		EntryTableName:            os.Getenv("NBOX_ENTRIES_TABLE_NAME"),
-		TrackingEntryTableName:    os.Getenv("NBOX_TRACKING_ENTRIES_TABLE_NAME"),
-		BoxTableName:              os.Getenv("NBOX_BOX_TABLE_NAME"),
-		AccountId:                 os.Getenv("ACCOUNT_ID"),
-		RegionName:                os.Getenv("AWS_REGION"),
-		ParameterStoreDefaultTier: os.Getenv("NBOX_PARAMETER_STORE_DEFAULT_TIER"), // Standard | Advanced
-		ParameterStoreKeyId:       os.Getenv("NBOX_PARAMETER_STORE_KEY_ID"),       // KMS KEY ID
+		BucketName:                env("NBOX_BUCKET_NAME", "nbox-store"),
+		EntryTableName:            env("NBOX_ENTRIES_TABLE_NAME", "nbox-entry-table"),
+		TrackingEntryTableName:    env("NBOX_TRACKING_ENTRIES_TABLE_NAME", "nbox-tracking-entry-table"),
+		BoxTableName:              env("NBOX_BOX_TABLE_NAME", "nbox-box-table"),
+		AccountId:                 env("ACCOUNT_ID", ""),
+		RegionName:                env("AWS_REGION", "us-east-1"),
+		ParameterStoreDefaultTier: env("NBOX_PARAMETER_STORE_DEFAULT_TIER", "Standard"), // Standard | Advanced
+		ParameterStoreKeyId:       env("NBOX_PARAMETER_STORE_KEY_ID", ""),               // KMS KEY ID
+		ParameterShortArn:         envBool("NBOX_PARAMETER_STORE_SHORT_ARN"),
 	}
+}
+
+func env(key string, defaultValue string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists || strings.TrimSpace(value) == "" {
+		return defaultValue
+	}
+	return value
+}
+
+//func envInt(key string, defaultValue int) int {
+//	value := env(key, fmt.Sprint(defaultValue))
+//	valueInt, err := strconv.Atoi(value)
+//	if err != nil {
+//		return defaultValue
+//	}
+//	return valueInt
+//}
+
+func envBool(key string) bool {
+	s := env(key, "false")
+	v, err := strconv.ParseBool(s)
+	if err != nil {
+		return false
+	}
+	return v
 }
