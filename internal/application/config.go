@@ -7,15 +7,17 @@ import (
 )
 
 type Config struct {
-	BucketName                string `pkl:"bucketName"`
-	EntryTableName            string `pkl:"entryTableName"`
-	TrackingEntryTableName    string `pkl:"trackingEntryTableName"`
-	BoxTableName              string `pkl:"boxTableName"`
-	RegionName                string `pkl:"regionName"`
-	AccountId                 string `pkl:"accountId"`
-	ParameterStoreDefaultTier string `pkl:"parameterStoreDefaultTier"`
-	ParameterStoreKeyId       string `pkl:"parameterStoreKeyId"`
-	ParameterShortArn         bool   `pkl:"parameterShortArn"`
+	BucketName                string   `pkl:"bucketName"`
+	EntryTableName            string   `pkl:"entryTableName"`
+	TrackingEntryTableName    string   `pkl:"trackingEntryTableName"`
+	BoxTableName              string   `pkl:"boxTableName"`
+	RegionName                string   `pkl:"regionName"`
+	AccountId                 string   `pkl:"accountId"`
+	ParameterStoreDefaultTier string   `pkl:"parameterStoreDefaultTier"`
+	ParameterStoreKeyId       string   `pkl:"parameterStoreKeyId"`
+	ParameterShortArn         bool     `pkl:"parameterShortArn"`
+	DefaultPrefix             string   `pkl:"defaultPrefix"`
+	AllowedPrefixes           []string `pkl:"allowedPrefixes"`
 }
 
 //func NewConfigFromPkl()  {
@@ -55,6 +57,12 @@ type Config struct {
 //}
 
 func NewConfigFromEnv() *Config {
+	var prefixes []string
+
+	prefixes = append(
+		prefixes,
+		strings.Split(env("NBOX_ALLOWED_PREFIXES", "development,qa,beta,staging,sandbox,production"), ",")...,
+	)
 
 	return &Config{
 		BucketName:                env("NBOX_BUCKET_NAME", "nbox-store"),
@@ -66,6 +74,8 @@ func NewConfigFromEnv() *Config {
 		ParameterStoreDefaultTier: env("NBOX_PARAMETER_STORE_DEFAULT_TIER", "Standard"), // Standard | Advanced
 		ParameterStoreKeyId:       env("NBOX_PARAMETER_STORE_KEY_ID", ""),               // KMS KEY ID
 		ParameterShortArn:         envBool("NBOX_PARAMETER_STORE_SHORT_ARN"),
+		DefaultPrefix:             env("NBOX_DEFAULT_PREFIX", "global"),
+		AllowedPrefixes:           prefixes,
 	}
 }
 

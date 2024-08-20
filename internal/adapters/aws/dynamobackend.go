@@ -90,6 +90,20 @@ func NewDynamodbBackend(dynamodb *dynamodb.Client, config *application.Config, p
 	}
 }
 
+func (d *dynamodbBackend) sanitize(key string) string {
+	key = strings.ToLower(key)
+	//text = strings.TrimSpace(text)
+	key = strings.Trim(key, "/")
+
+	for _, prefix := range d.config.AllowedPrefixes {
+		if !strings.HasPrefix(key, prefix) {
+			key = fmt.Sprintf("%s/%s", d.config.DefaultPrefix, key)
+			break
+		}
+	}
+	return key
+}
+
 // Upsert is used to insert or update an entry
 func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) map[string]error {
 	records := map[string]Record{}
@@ -101,8 +115,11 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) ma
 
 	for _, entry := range entries {
 		now := time.Now().UTC()
-		path := d.pathUseCase.PathWithoutKey(entry.Key)
-		key := d.pathUseCase.BaseKey(entry.Key)
+
+		entryKey := d.sanitize(entry.Key)
+
+		path := d.pathUseCase.PathWithoutKey(entryKey)
+		key := d.pathUseCase.BaseKey(entryKey)
 
 		metadata := models.Metadata{
 			UpdatedAt: now,
@@ -119,10 +136,10 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) ma
 			},
 		}
 
-		tracking[entry.Key] = RecordTracking{
+		tracking[entryKey] = RecordTracking{
 			Timestamp: strconv.FormatInt(now.Unix(), 10),
 			RecordBase: &RecordBase{
-				Key:   entry.Key,
+				Key:   entryKey,
 				Value: []byte(entry.Value),
 				Metadata: models.Metadata{
 					UpdatedAt: now,
@@ -133,7 +150,7 @@ func (d *dynamodbBackend) Upsert(ctx context.Context, entries []models.Entry) ma
 			},
 		}
 
-		for _, prefix := range d.pathUseCase.Prefixes(entry.Key) {
+		for _, prefix := range d.pathUseCase.Prefixes(entryKey) {
 			path = d.pathUseCase.PathWithoutKey(prefix)
 			key = fmt.Sprintf("%s/", d.pathUseCase.BaseKey(prefix))
 			records[fmt.Sprintf("%s%s", path, key)] = Record{

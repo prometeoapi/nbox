@@ -75,6 +75,9 @@ func (b *BoxHandler) Build(w http.ResponseWriter, r *http.Request) {
 	args := make(map[string]string)
 
 	for key := range r.URL.Query() {
+		if key == "service" || key == "stage" || key == "template" {
+			continue
+		}
 		args[key] = r.URL.Query().Get(key)
 	}
 
