@@ -59,9 +59,13 @@ type Config struct {
 func NewConfigFromEnv() *Config {
 	var prefixes []string
 
+	defaultPrefix := env("NBOX_DEFAULT_PREFIX", "global")
+
+	prefixes = append(prefixes, defaultPrefix)
+
 	prefixes = append(
 		prefixes,
-		strings.Split(env("NBOX_ALLOWED_PREFIXES", "development,qa,beta,staging,sandbox,production"), ",")...,
+		strings.Split(env("NBOX_ALLOWED_PREFIXES", "development/,qa/,beta/,staging/,sandbox/,production/"), ",")...,
 	)
 
 	return &Config{
@@ -74,7 +78,7 @@ func NewConfigFromEnv() *Config {
 		ParameterStoreDefaultTier: env("NBOX_PARAMETER_STORE_DEFAULT_TIER", "Standard"), // Standard | Advanced
 		ParameterStoreKeyId:       env("NBOX_PARAMETER_STORE_KEY_ID", ""),               // KMS KEY ID
 		ParameterShortArn:         envBool("NBOX_PARAMETER_STORE_SHORT_ARN"),
-		DefaultPrefix:             env("NBOX_DEFAULT_PREFIX", "global"),
+		DefaultPrefix:             defaultPrefix,
 		AllowedPrefixes:           prefixes,
 	}
 }

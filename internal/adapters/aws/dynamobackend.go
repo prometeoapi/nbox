@@ -90,17 +90,22 @@ func NewDynamodbBackend(dynamodb *dynamodb.Client, config *application.Config, p
 	}
 }
 
+func (d *dynamodbBackend) cleanedKey(key string) string {
+	for _, prefix := range d.config.AllowedPrefixes {
+		if strings.HasPrefix(key, prefix) {
+			return key
+		}
+	}
+	return fmt.Sprintf("%s/%s", d.config.DefaultPrefix, key)
+}
+
 func (d *dynamodbBackend) sanitize(key string) string {
 	key = strings.ToLower(key)
 	key = strings.TrimSpace(key)
 	key = strings.Trim(key, "/")
 
-	for _, prefix := range d.config.AllowedPrefixes {
-		if !strings.HasPrefix(key, prefix) {
-			key = fmt.Sprintf("%s/%s", d.config.DefaultPrefix, key)
-			break
-		}
-	}
+	key = d.cleanedKey(key)
+
 	return key
 }
 
