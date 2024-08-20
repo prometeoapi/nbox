@@ -96,7 +96,9 @@ func (d *dynamodbBackend) cleanedKey(key string) string {
 			return key
 		}
 	}
-	return fmt.Sprintf("%s/%s", d.config.DefaultPrefix, key)
+	return fmt.Sprintf(
+		"%s/%s", strings.Trim(d.config.DefaultPrefix, "/"), key,
+	)
 }
 
 func (d *dynamodbBackend) sanitize(key string) string {

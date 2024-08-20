@@ -1,6 +1,7 @@
 package application
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -61,7 +62,7 @@ func NewConfigFromEnv() *Config {
 
 	defaultPrefix := env("NBOX_DEFAULT_PREFIX", "global")
 
-	prefixes = append(prefixes, defaultPrefix)
+	prefixes = append(prefixes, fmt.Sprintf("%s/", defaultPrefix))
 
 	prefixes = append(
 		prefixes,
