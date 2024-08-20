@@ -92,7 +92,7 @@ func NewDynamodbBackend(dynamodb *dynamodb.Client, config *application.Config, p
 
 func (d *dynamodbBackend) sanitize(key string) string {
 	key = strings.ToLower(key)
-	//text = strings.TrimSpace(text)
+	key = strings.TrimSpace(key)
 	key = strings.Trim(key, "/")
 
 	for _, prefix := range d.config.AllowedPrefixes {
