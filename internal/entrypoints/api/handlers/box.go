@@ -100,3 +100,13 @@ func (b *BoxHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	response.Success(w, r, data)
 }
+
+func (b *BoxHandler) ListVars(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	service := chi.URLParam(r, "service")
+	stage := chi.URLParam(r, "stage")
+	template := chi.URLParam(r, "template")
+
+	data := b.boxUseCase.ListVars(ctx, service, stage, template)
+	response.Success(w, r, data)
+}

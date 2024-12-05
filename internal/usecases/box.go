@@ -60,3 +60,12 @@ func (b *BoxUseCase) VarsBuilder(tmpl string, service string, stage string, temp
 
 	return strings.NewReplacer(oldnew...).Replace(tmpl)
 }
+
+func (b *BoxUseCase) ListVars(ctx context.Context, service string, stage string, template string) []string {
+	box, err := b.templateAdapter.RetrieveBox(ctx, service, stage, template)
+	if err != nil {
+		return []string{}
+	}
+	proc := NewProcessor(string(box))
+	return proc.GetVars()
+}

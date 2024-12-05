@@ -1,8 +1,8 @@
-bucketName = "prometeoapi-nbox-qa"
-// tableName = "prometeoapi-nbox-qa"
+bucketName = "example-nbox-qa"
+// tableName = "example-nbox-qa"
 entryTableName = "test"
 boxTableName = "nbox-box-production"
 
-// bucketName = "prometeoapi-nbox-box-production"
+// bucketName = "example-nbox-box-production"
 // entryTableName = "nbox-entries-production"
 // boxTableName = "nbox-box-production"

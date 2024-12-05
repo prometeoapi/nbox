@@ -139,7 +139,7 @@ Para la creción de un template se necesita codificar en base64 el template. Par
   "containerDefinitions": [
     {
       "name": "nginx",
-      "image": "nginx:latest",
+      "image": ":image-name",
       "memory": 256,
       "cpu": 256,
       "essential": true,
@@ -276,7 +276,7 @@ En la contrucción de los templates se cuentan con dos tipos de variables
   - cualquier variable tipo querystring
 
 ```shell
-curl -X GET --location "https://nbox.prometeoapi.com/api/box/token-api/development/task_definition.json/build?image-name=nginx:latest" \
+curl -X GET --location "https://nbox.example.com/api/box/token-api/development/task_definition.json/build?image-name=nginx:latest" \
 	-H "Content-Type: application/json" \
 	--basic --user "$NBOX_CREDENTIALS" -sSf | jq
 ```

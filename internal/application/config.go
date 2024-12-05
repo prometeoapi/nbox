@@ -19,6 +19,7 @@ type Config struct {
 	ParameterShortArn         bool     `pkl:"parameterShortArn"`
 	DefaultPrefix             string   `pkl:"defaultPrefix"`
 	AllowedPrefixes           []string `pkl:"allowedPrefixes"`
+	HmacSecretKey             []byte
 }
 
 //func NewConfigFromPkl()  {
@@ -57,6 +58,8 @@ type Config struct {
 //	return config
 //}
 
+const PrefixBasicAuthCredentials = "NBOX_BASIC_AUTH_CREDENTIALS"
+
 func NewConfigFromEnv() *Config {
 	var prefixes []string
 
@@ -81,6 +84,7 @@ func NewConfigFromEnv() *Config {
 		ParameterShortArn:         envBool("NBOX_PARAMETER_STORE_SHORT_ARN"),
 		DefaultPrefix:             defaultPrefix,
 		AllowedPrefixes:           prefixes,
+		HmacSecretKey:             []byte(env("HMAC_SECRET_KEY", "2oxgr3!laxu&66(7$3$yzmblz4wpo_0yhlluo-n*ji&3_zr39e-")),
 	}
 }
 

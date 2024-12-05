@@ -1,0 +1,40 @@
+
+### globales 1
+POST http://localhost:7337/api/entry
+Authorization: Basic user pass
+Content-Type: application/json
+
+[
+  {"key": "test/norlis-secret/user", "value": "test", "secure": true}
+]
+
+### globales 2
+POST http://localhost:7337/api/entry
+Authorization: Basic user pass
+Content-Type: application/json
+
+[
+  {"key": "proxy/test-passwd", "value": "xxxxxxxxxxx", "secure": true}
+]
+
+
+### view
+GET http://localhost:7337/api/entry/prefix?v=global/example/
+#Authorization: Basic user pass
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIiLCJleHAiOjE3MzAyMjk1NjgsIm5iZiI6MTczMDE0MzE2OCwiaWF0IjoxNzMwMTQzMTY4fQ.qp6nW3Mu3LoZQTys7eq3vkH5bUGzdeXVnS0LKSduLxg
+Content-Type: application/json
+
+
+### view
+GET http://localhost:7337/health
+Content-Type: application/json
+
+
+### token
+POST http://localhost:7337/api/auth/token
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "pass"
+}

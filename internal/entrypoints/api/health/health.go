@@ -6,7 +6,6 @@ import (
 	"nbox/internal/entrypoints/api/response"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -50,18 +49,8 @@ func (u Health) Uptime() string {
 	return time.Since(u.StartedAt).String()
 }
 
-func (u Health) Healthy(endpoint string) func(http.Handler) http.Handler {
-	f := func(h http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			if (r.Method == "GET" || r.Method == "HEAD") && strings.EqualFold(r.URL.Path, endpoint) {
-				response.Success(w, r, healthOut{
-					&u, u.Uptime(),
-				})
-				return
-			}
-			h.ServeHTTP(w, r)
-		}
-		return http.HandlerFunc(fn)
-	}
-	return f
+func (u Health) Healthy(w http.ResponseWriter, r *http.Request) {
+	response.Success(w, r, healthOut{
+		&u, u.Uptime(),
+	})
 }
