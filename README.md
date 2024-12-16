@@ -425,6 +425,57 @@ curl -X GET --location "http://localhost:7337/health" -H "Content-Type: applicat
 ```
 
 
+## Open API
+```shell
+go install github.com/swaggo/swag/cmd/swag@latest
+
+go get -u github.com/swaggo/http-swagger
+go get -u github.com/swaggo/swag
+
+./bin/swag init -g internal/entrypoints/api/api.go
+
+make docs
+```
+
+```go
+// UpsertBox
+// @Summary Upsert templates
+// @Description insert or update templates on s3
+// @Tags templates
+// @Accept json
+// @Produce json
+// @Param data body models.Box true "Upsert template"
+// @Success 200 {object} []string ""
+// @Failure 400 {object} problem.ProblemDetail "Bad Request"
+// @Failure 401 {object} problem.ProblemDetail "Unauthorized"
+// @Failure 403 {object} problem.ProblemDetail "Forbidden"
+// @Failure 404 {object} problem.ProblemDetail "Not Found"
+// @Failure 500 {object} problem.ProblemDetail "Internal error"
+// @Router /api/box [post]
+```
+https://github.com/swaggo/swag?tab=readme-ov-file#the-swag-formatter
+
+Descripción de las anotaciones
+1.	**@Summary y @Description**
+•	@Summary: Describe brevemente lo que hace el endpoint.
+•	@Description: Proporciona una explicación más detallada.
+2.	**@Tags**
+•	Úsalo para categorizar endpoints, por ejemplo, “usuarios”, “productos”, etc.
+3.	**@Accept y @Produce**
+•	@Accept: Especifica el tipo de contenido esperado (en este caso, JSON).
+•	@Produce: Especifica el tipo de contenido que el endpoint devolverá (en este caso, JSON).
+4.	**@Param**
+•	Define los parámetros de la solicitud.
+•	body: Indica que el parámetro está en el cuerpo.
+•	CreateRequest: Estructura esperada.
+•	true: Especifica si es obligatorio.
+5.	**@Success y @Failure**
+•	@Success: Describe una respuesta exitosa.
+•	@Failure: Describe posibles respuestas de error.
+6.	**@Router**
+•	Especifica la ruta y el método HTTP (en este caso, POST).
+
+
 ## TODO
 - [ ] Enables HTTP Basic authentication. 
 

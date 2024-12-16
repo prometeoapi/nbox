@@ -1,0 +1,590 @@
+basePath: /
+definitions:
+  auth.TokenRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  handlers.CommandBox:
+    properties:
+      id:
+        example: "123"
+        type: string
+      payload:
+        $ref: '#/definitions/models.Box'
+    type: object
+  health.Health:
+    properties:
+      hostname:
+        type: string
+      service:
+        type: string
+      startedAt:
+        type: string
+    type: object
+  models.Box:
+    properties:
+      service:
+        type: string
+      stage:
+        additionalProperties:
+          $ref: '#/definitions/models.Stage'
+        type: object
+    type: object
+  models.Entry:
+    properties:
+      key:
+        example: development/service/var-example
+        type: string
+      path:
+        type: string
+      secure:
+        example: false
+        type: boolean
+      value:
+        example: value 123
+        type: string
+    type: object
+  models.Stage:
+    properties:
+      template:
+        $ref: '#/definitions/models.Template'
+    type: object
+  models.Template:
+    properties:
+      name:
+        description: s3 path
+        type: string
+      value:
+        type: string
+    type: object
+  models.Tracking:
+    properties:
+      key:
+        type: string
+      secure:
+        type: boolean
+      updatedAt:
+        type: string
+      updatedBy:
+        type: string
+      value:
+        type: string
+    type: object
+  problem.ProblemDetail:
+    properties:
+      detail:
+        example: invalid credentials
+        type: string
+      instance:
+        example: /api/example
+        type: string
+      requestId:
+        example: "123"
+        type: string
+      stackTrace:
+        type: string
+      status:
+        example: 401
+        type: integer
+      timestamp:
+        example: "2024-12-11T20:23:55.248212-03:00"
+        type: string
+      title:
+        example: Unauthorized
+        type: string
+      type:
+        example: Err
+        type: string
+    type: object
+info:
+  contact:
+    email: norlis.viamonte@gmail.com
+    name: Norlis Viamonte
+    url: http://www.example.com/support
+  description: Esta es una API generada automáticamente con Swaggo.
+  termsOfService: http://swagger.io/terms/
+  title: nbox API
+  version: "1.0"
+paths:
+  /api/auth/token:
+    post:
+      consumes:
+      - application/json
+      description: authentication token
+      parameters:
+      - description: Payload
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/auth.TokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token generated successfully
+          schema:
+            properties:
+              token:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Token
+      tags:
+      - auth
+  /api/box:
+    get:
+      consumes:
+      - application/json
+      description: all templates
+      parameters:
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Box'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: List templates
+      tags:
+      - templates
+    post:
+      consumes:
+      - application/json
+      description: insert or update templates on s3
+      parameters:
+      - description: Upsert template
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CommandBox'
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Upsert templates
+      tags:
+      - templates
+  /api/box/{service}/{stage}/{template}:
+    get:
+      description: detail
+      parameters:
+      - description: service name
+        in: path
+        name: service
+        required: true
+        type: string
+      - description: stage
+        in: path
+        name: stage
+        required: true
+        type: string
+      - description: template name
+        in: path
+        name: template
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Retrieve template
+      tags:
+      - templates
+    head:
+      consumes:
+      - application/json
+      description: Check the existence of the template
+      parameters:
+      - description: service name
+        in: path
+        name: service
+        required: true
+        type: string
+      - description: stage
+        in: path
+        name: stage
+        required: true
+        type: string
+      - description: template name
+        in: path
+        name: template
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              exit:
+                type: boolean
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Exist template
+      tags:
+      - templates
+  /api/box/{service}/{stage}/{template}/build:
+    get:
+      description: replace vars patterns
+      parameters:
+      - description: service name
+        in: path
+        name: service
+        required: true
+        type: string
+      - description: stage
+        in: path
+        name: stage
+        required: true
+        type: string
+      - description: template name
+        in: path
+        name: template
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Build template
+      tags:
+      - templates
+  /api/box/{service}/{stage}/{template}/vars:
+    get:
+      description: show all vars in template
+      parameters:
+      - description: service name
+        in: path
+        name: service
+        required: true
+        type: string
+      - description: stage
+        in: path
+        name: stage
+        required: true
+        type: string
+      - description: template name
+        in: path
+        name: template
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: List vars template
+      tags:
+      - templates
+  /api/entry:
+    post:
+      consumes:
+      - application/json
+      description: insert / update vars
+      parameters:
+      - description: Upsert template
+        in: body
+        name: data
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/models.Entry'
+          type: array
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Upsert entries
+      tags:
+      - entry
+  /api/entry/key:
+    delete:
+      description: delete keys & children
+      parameters:
+      - description: key path
+        in: query
+        name: v
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Delete
+      tags:
+      - entry
+    get:
+      description: detail
+      parameters:
+      - description: key path
+        in: query
+        name: v
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Entry'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Retrieve key
+      tags:
+      - entry
+  /api/entry/prefix:
+    get:
+      description: list all keys by path
+      parameters:
+      - description: key path
+        in: query
+        name: v
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Entry'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: Filter by prefix
+      tags:
+      - entry
+  /api/track/key:
+    get:
+      description: history changes
+      parameters:
+      - description: key path
+        in: query
+        name: v
+        required: true
+        type: string
+      - description: Bearer | Basic
+        in: header
+        name: authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Tracking'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/problem.ProblemDetail'
+      summary: History
+      tags:
+      - entry
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: status format json
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/health.Health'
+      summary: health
+      tags:
+      - status
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

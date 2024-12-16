@@ -35,17 +35,17 @@ Content-Language: en
 	}
 */
 type ProblemDetail struct {
-	Status   int    `json:"status,omitempty"`
-	Title    string `json:"title,omitempty"`
-	Detail   string `json:"detail,omitempty"`
-	Type     string `json:"type,omitempty"`
-	Instance string `json:"instance,omitempty"`
+	Status   int    `json:"status,omitempty" example:"401"`
+	Title    string `json:"title,omitempty" example:"Unauthorized"`
+	Detail   string `json:"detail,omitempty" example:"invalid credentials"`
+	Type     string `json:"type,omitempty" example:"Err"`
+	Instance string `json:"instance,omitempty" example:"/api/example"`
 	Extension
 }
 
 type Extension struct {
-	RequestId  string    `json:"requestId,omitempty"`
-	Timestamp  time.Time `json:"timestamp"`
+	RequestId  string    `json:"requestId,omitempty" example:"123"`
+	Timestamp  time.Time `json:"timestamp" example:"2024-12-11T20:23:55.248212-03:00"`
 	StackTrace string    `json:"stackTrace,omitempty"`
 }
 

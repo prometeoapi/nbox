@@ -7,9 +7,9 @@ import (
 
 type Entry struct {
 	Path   string `json:"path,omitempty"`
-	Key    string `json:"key"`
-	Value  string `json:"value"`
-	Secure bool   `json:"secure"`
+	Key    string `json:"key" example:"development/service/var-example"`
+	Value  string `json:"value" example:"value 123"`
+	Secure bool   `json:"secure" example:"false"`
 }
 
 func (e *Entry) String() string {

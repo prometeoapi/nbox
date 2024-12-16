@@ -49,6 +49,15 @@ func (u Health) Uptime() string {
 	return time.Since(u.StartedAt).String()
 }
 
+// Healthy check
+// @Summary health
+// @Description status format json
+// @Tags status
+// @Produce json
+// @Success 200 {object} health.Health{}
+// @Router /health [get]
+// @Accept       json
+// @Produce      json
 func (u Health) Healthy(w http.ResponseWriter, r *http.Request) {
 	response.Success(w, r, healthOut{
 		&u, u.Uptime(),

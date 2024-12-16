@@ -8,15 +8,29 @@ import (
 	"net/http"
 	"time"
 
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+
+	_ "nbox/docs" // Importa los documentos generados por swag
 )
 
 type Api struct {
 	Engine http.Handler
 }
 
+// NewApi
+// @title           nbox API
+// @version         1.0
+// @description     Esta es una API generada automáticamente con Swaggo.
+// @termsOfService  http://swagger.io/terms/
+// @contact.name   Norlis Viamonte
+// @contact.url    http://www.example.com/support
+// @contact.email  norlis.viamonte@gmail.com
+// @BasePath  /
+// @securityDefinitions.basic  BasicAuth
 func NewApi(
 	box *handlers.BoxHandler,
 	entry *handlers.EntryHandler,
@@ -40,6 +54,10 @@ func NewApi(
 	r.Use(middleware.Timeout(60 * time.Second))
 	//r.Use(authn.Handler())
 	r.Use(corsConfig)
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:7337/swagger/doc.json"), //The url pointing to API definition
+	))
 
 	r.NotFound(response.NotFound)
 	r.MethodNotAllowed(response.MethodNotAllowed)

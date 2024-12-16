@@ -30,6 +30,10 @@ golint: lint-static-check
 gomod-tidy:
 	@$(MAKE) for-all-target TARGET="mod-tidy"
 
+.PHONY: docs
+docs:
+	$(TOOLS_BIN_DIR)/swag init -g internal/entrypoints/api/api.go
+
 .PHONY: gomod-vendor
 gomod-vendor:
 	go mod vendor
@@ -40,6 +44,7 @@ install-tools:
 	cd $(TOOLS_MOD_DIR) && GOBIN=$(TOOLS_BIN_DIR) go install honnef.co/go/tools/cmd/staticcheck
 	cd $(TOOLS_MOD_DIR) && GOBIN=$(TOOLS_BIN_DIR) go install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd $(TOOLS_MOD_DIR) && GOBIN=$(TOOLS_BIN_DIR) go install mvdan.cc/sh/v3/cmd/shfmt
+	cd $(TOOLS_MOD_DIR) && GOBIN=$(TOOLS_BIN_DIR) go install github.com/swaggo/swag/cmd/swag@latest
 
 .PHONY: install-all-deps
 install-all-deps:

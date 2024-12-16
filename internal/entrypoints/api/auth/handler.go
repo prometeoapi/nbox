@@ -20,6 +20,22 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+type TokenRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// TokenHandler JWT
+// @Summary Token
+// @Description authentication token
+// @Tags auth
+// @Accept       json
+// @Produce      json
+// @Param data body TokenRequest true "Payload"
+// @Success 200 {object} object{token=string} "Token generated successfully"
+// @Failure 401 {object} problem.ProblemDetail "Unauthorized"
+// @Failure 500 {object} problem.ProblemDetail "Internal error"
+// @Router /api/auth/token [post]
 func (a Authn) TokenHandler(w http.ResponseWriter, r *http.Request) {
 	credentials := map[string]string{}
 	err := json.Unmarshal([]byte(os.Getenv(application.PrefixBasicAuthCredentials)), &credentials)
@@ -28,10 +44,7 @@ func (a Authn) TokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload := &struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}{}
+	payload := &TokenRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 		response.Error(w, r, err, http.StatusBadRequest)
