@@ -29,6 +29,7 @@ type Api struct {
 // @contact.name   Norlis Viamonte
 // @contact.url    http://www.example.com/support
 // @contact.email  norlis.viamonte@gmail.com
+// @host
 // @BasePath  /
 // @securityDefinitions.basic  BasicAuth
 func NewApi(
@@ -56,7 +57,7 @@ func NewApi(
 	r.Use(corsConfig)
 
 	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:7337/swagger/doc.json"), //The url pointing to API definition
+		httpSwagger.URL("/swagger/doc.json"), //The url pointing to API definition
 	))
 
 	r.NotFound(response.NotFound)
