@@ -2,8 +2,10 @@ package usecases
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"nbox/internal/domain"
+	"nbox/internal/domain/models"
 	"strings"
 )
 
@@ -22,6 +24,10 @@ func NewBox(boxOperation domain.TemplateAdapter, entryOperations domain.EntryAda
 }
 
 func (b *BoxUseCase) BuildBox(ctx context.Context, service string, stage string, template string, args map[string]string) (string, error) {
+	var schemaEnum models.SchemaType
+
+	schema, _ := schemaEnum.GetSchemaFromFilename(template)
+
 	box, err := b.templateAdapter.RetrieveBox(ctx, service, stage, template)
 	if err != nil {
 		return "", err
@@ -38,12 +44,26 @@ func (b *BoxUseCase) BuildBox(ctx context.Context, service string, stage string,
 		for _, entry := range entries {
 			if k == strings.TrimSpace(entry.Path) {
 				p := b.pathUseCase.Concat(k, entry.Key)
-				tree[p] = entry.Value
+				tree[p] = b.transformBySchema(schema, entry.Value)
 			}
 		}
 	}
 
 	return proc.Replace(tree), nil
+}
+
+func (b *BoxUseCase) transformBySchema(schemeType models.SchemaType, value string) string {
+	switch schemeType {
+	case models.JSON:
+		//return strings.ReplaceAll(value, `"`, `\"`)
+		escaped, err := json.Marshal(value)
+		if err != nil {
+			return ""
+		}
+		return strings.Trim(string(escaped), `"`)
+	default:
+		return value
+	}
 }
 
 func (b *BoxUseCase) VarsBuilder(tmpl string, service string, stage string, template string, args map[string]string) string {

@@ -7,7 +7,7 @@ package tools
 
 import (
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	_ "github.com/swaggo/swag/cmd/swag@latest"
+	_ "github.com/swaggo/swag/cmd/swag"
 	_ "go.opentelemetry.io/build-tools/dbotconf"
 	_ "golang.org/x/tools/cmd/goimports"
 	_ "honnef.co/go/tools/cmd/staticcheck"

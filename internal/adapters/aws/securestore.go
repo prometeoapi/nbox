@@ -97,9 +97,15 @@ func prepareSecret(entry models.Entry, parameterStoreDefaultTier string, paramet
 		Overwrite: aws.Bool(true),
 	}
 
-	if parameterStoreDefaultTier != "" {
-		parameterInput.Tier = types.ParameterTier(parameterStoreDefaultTier)
+	// when the value exceeds 4 KB
+	if len(entry.Value) > 4096 {
+		parameterInput.Tier = types.ParameterTierAdvanced
 	}
+
+	// TODO delete this configuration
+	//if parameterStoreDefaultTier != "" {
+	//	parameterInput.Tier = types.ParameterTier(parameterStoreDefaultTier)
+	//}
 
 	if parameterStoreKeyId != "" {
 		parameterInput.KeyId = aws.String(parameterStoreKeyId)

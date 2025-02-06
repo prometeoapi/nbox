@@ -48,3 +48,5 @@ infraestructura/k8s/minikube/ingress-certs/
 
 application.yaml
 certs
+
+.run/
