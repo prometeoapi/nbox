@@ -1,0 +1,13 @@
+name: nbox - Deploy Workflow
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  Deploy:
+    uses: prometeoapi/github-actions/.github/workflows/nbox_deploy_workflow.yml@main
+    secrets: inherit
+
+
+
